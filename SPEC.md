@@ -1,0 +1,310 @@
+# StudyLog — Build Specification (Agent Harness Edition)
+
+> **Single source of truth.** You are an autonomous coding agent running in a loop.
+> Work through the **Milestone Checklist** top to bottom. After **every** task:
+> run `./gradlew build`, ensure it is **green**, then commit with a conventional-commit
+> message. Do not invent features outside this spec. Stop when every box in
+> **Definition of Done** is checked.
+
+---
+
+## 1. Product Overview
+
+**StudyLog** is a backend server for a real-time, multi-room study service with a
+Gen-Z "셋로그 (Setlog)" flavor: friends create a **study room (로그)**, study together
+with a **shared Pomodoro timer**, see each other's live **presence**, and at the end
+of each focus cycle drop a quick **study snapshot** (emoji + one-line memo + minutes)
+that aggregates into a shared session feed. Light gamification (streaks, badges, a
+shared room pet) keeps people coming back.
+
+This deliverable is **server-only**. A frontend (and 3D assets) may be added later and
+is **out of scope** here. The server must be fully exercisable via REST + STOMP clients
+and an automated test suite.
+
+### Design goals (ranked)
+1. **Correctness under concurrency** — room capacity is never exceeded, even under
+   100 simultaneous join attempts. This is the headline feature.
+2. **Demonstrate advanced backend technique** cleanly (concurrency control, real-time
+   messaging, OAuth2, layered testing, CI/CD).
+3. Clean, idiomatic, well-tested Spring Boot code that reads like production.
+
+---
+
+## 2. Tech Stack (locked)
+
+| Concern        | Choice                                                        |
+|----------------|---------------------------------------------------------------|
+| Language       | Java 21 (LTS)                                                  |
+| Framework      | Spring Boot 3.3+ (latest stable 3.x via start.spring.io)       |
+| Build          | Gradle (Groovy DSL), wrapper committed                         |
+| Web            | spring-boot-starter-web                                        |
+| Realtime       | spring-boot-starter-websocket (STOMP + SockJS)                 |
+| Persistence    | spring-boot-starter-data-jpa + MySQL 8                         |
+| Cache / lock   | Spring Data Redis + Redisson (distributed lock)                |
+| Security       | spring-boot-starter-security + spring-boot-starter-oauth2-client |
+| Tokens         | JWT (jjwt or java-jwt)                                         |
+| API docs       | springdoc-openapi (Swagger UI)                                |
+| Migrations     | Flyway                                                         |
+| Test           | JUnit 5, AssertJ, Mockito, Testcontainers (MySQL + Redis)     |
+| Container      | Dockerfile (multi-stage) + docker-compose (app + mysql + redis)|
+| CI             | GitHub Actions (build + test)                                 |
+
+**Hard constraints**
+- Use **constructor injection** only. No field injection.
+- No business logic in controllers. Controllers delegate to services.
+- All secrets via environment variables / `application.yml` placeholders. **Never** commit
+  real client IDs, secrets, or keys. Provide `.env.example` and `application.yml` with
+  `${...}` placeholders.
+- Stateless auth: JWT in `Authorization: Bearer`. No HTTP session for API auth.
+
+---
+
+## 3. Domain Model
+
+Entities (JPA, all with `id BIGINT AUTO_INCREMENT`, `createdAt`, `updatedAt` auditing):
+
+### User
+- `oauthProvider` (enum: GOOGLE, KAKAO)
+- `oauthId` (provider's subject id) — unique with provider
+- `email`, `nickname`, `avatarType` (enum/string, cute presets e.g. CAT, BEAR, FROG)
+- `totalStudyMinutes` (long), `currentStreak` (int), `longestStreak` (int), `lastStudyDate`
+
+### Room
+- `name`, `hostUserId`
+- `capacity` (default 4, max 6)
+- `status` (enum: WAITING, ACTIVE, CLOSED)
+- `inviteCode` (short unique slug)
+- `currentMemberCount` (int) — denormalized counter used by lock strategies
+- `@Version Long version` — used by optimistic strategy
+
+### RoomMember
+- `roomId`, `userId`, `role` (HOST, MEMBER), `presence` (ONLINE, AWAY, OFFLINE), `joinedAt`
+- Unique constraint on `(roomId, userId)`
+
+### StudyLogEntry  *(the "셋로그 snapshot")*
+- `roomId`, `userId`, `cycleNumber` (int), `emoji`, `memo` (<= 100 chars), `studiedMinutes`, `createdAt`
+
+### RoomPet  *(shared gamification)*
+- `roomId` (1:1), `growthPoints` (int), `level` (int)
+- Every member's snapshot adds growth points; concurrent feeds must be counted correctly.
+
+### Badge
+- `userId`, `type` (enum: FIRST_LOG, STREAK_7, NIGHT_OWL, MARATHON, ...), `earnedAt`
+- Unique on `(userId, type)`
+
+Use Flyway migrations (`V1__init.sql`, ...) as the source of schema truth; let JPA
+validate (`ddl-auto: validate`), not generate.
+
+---
+
+## 4. Concurrency Strategy ⭐ (headline)
+
+The **join-room** operation must enforce `currentMemberCount < capacity` atomically.
+Implement a `RoomJoinStrategy` interface with **three** swappable implementations,
+selectable via config property `studylog.join-strategy = PESSIMISTIC | OPTIMISTIC | DISTRIBUTED`.
+
+```java
+public interface RoomJoinStrategy {
+    RoomMember join(Long roomId, Long userId); // throws RoomFullException
+}
+```
+
+1. **PessimisticLockJoinStrategy**
+   - Repository method annotated `@Lock(LockModeType.PESSIMISTIC_WRITE)` selecting the
+     room row (`SELECT ... FOR UPDATE`), check count, insert member, increment counter.
+
+2. **OptimisticLockJoinStrategy**
+   - Read room (with `@Version`), check count, increment, save. On
+     `OptimisticLockingFailureException`, retry up to N times with small backoff.
+
+3. **DistributedLockJoinStrategy**
+   - Acquire Redisson `RLock` keyed `lock:room:{roomId}` with sane lease/wait timeouts,
+     then perform the check-and-insert. Models multi-instance correctness.
+
+In-memory live state (presence registry, active timers) is held in a
+`ConcurrentHashMap`-backed component guarded where needed by `ReentrantLock` — this is the
+language-level `java.util.concurrent` showcase that complements the DB-level locks.
+
+Document a comparison (semantics, failure mode, when to use) in the README as a table.
+
+---
+
+## 5. REST API
+
+Base path `/api`. JSON only. Unified error envelope via `@RestControllerAdvice`:
+`{ "timestamp", "status", "code", "message", "path" }`. Bean Validation on all request bodies.
+
+| Method | Path                              | Auth | Purpose                                   |
+|--------|-----------------------------------|------|-------------------------------------------|
+| GET    | `/api/users/me`                   | yes  | Current user profile + stats              |
+| PATCH  | `/api/users/me`                   | yes  | Update nickname / avatarType              |
+| POST   | `/api/rooms`                      | yes  | Create room (host)                        |
+| GET    | `/api/rooms`                      | yes  | List rooms (paginated, filter by status)  |
+| GET    | `/api/rooms/{id}`                 | yes  | Room detail + members                     |
+| POST   | `/api/rooms/{id}/join`            | yes  | **Join (concurrency-guarded)**            |
+| DELETE | `/api/rooms/{id}/members/me`      | yes  | Leave room                                |
+| GET    | `/api/rooms/{id}/logs`            | yes  | Snapshot feed (paginated)                 |
+| POST   | `/api/rooms/{id}/logs`            | yes  | Submit study snapshot (also broadcast)    |
+| GET    | `/api/stats/me`                   | yes  | Streak, total minutes, badges             |
+
+Return proper status codes: `201` create, `409` on `RoomFullException`/duplicate join,
+`403` non-member actions, `404` missing room. Use DTOs for requests/responses, never
+expose entities directly.
+
+---
+
+## 6. Realtime (STOMP)
+
+- WebSocket endpoint: `/ws` with SockJS fallback.
+- Application prefix `/app`, broker prefixes `/topic`, `/queue`.
+- Authenticate the STOMP `CONNECT` via a `ChannelInterceptor` that reads the JWT from the
+  `Authorization` native header and binds the principal.
+
+**Subscriptions (server → client)**
+- `/topic/rooms/{roomId}` — room event stream: `MEMBER_JOINED`, `MEMBER_LEFT`,
+  `PRESENCE_UPDATED`, `TIMER_TICK`, `TIMER_PHASE_CHANGED`, `NEW_LOG`, `PET_GREW`.
+  All events share an envelope `{ type, roomId, payload, serverTime }`.
+
+**Sends (client → server)**
+- `/app/rooms/{roomId}/chat` — chat message → broadcast.
+- `/app/rooms/{roomId}/presence` — heartbeat / AWAY toggle.
+- `/app/rooms/{roomId}/timer/control` — host-only: START / PAUSE / SKIP the shared Pomodoro.
+
+A server-side scheduler drives the shared timer and emits `TIMER_TICK` /
+`TIMER_PHASE_CHANGED` (FOCUS ↔ BREAK) to the room topic. Timer state lives in the in-memory
+concurrent registry, keyed by roomId.
+
+---
+
+## 7. Auth (OAuth2)
+
+- Spring Security OAuth2 **Client** with Google and Kakao registrations (config-driven).
+- On successful OAuth login, upsert the `User`, then **issue our own JWT** (access token;
+  optional refresh) returned to the caller. Custom `OAuth2UserService` +
+  `AuthenticationSuccessHandler`.
+- A `JwtAuthenticationFilter` validates the bearer token on each API request and on STOMP
+  CONNECT. Configure `SecurityFilterChain` (stateless, CSRF off for API, CORS configured).
+- Provide a dev-only `POST /api/auth/dev-login` (enabled by profile `local`) that mints a
+  JWT for a seeded test user **so the test suite and the harness can run without real
+  Google/Kakao credentials**. Must be disabled outside `local`/`test` profiles.
+
+---
+
+## 8. Testing (must be layered and green)
+
+- **Unit** — services, streak/badge calculation, each `RoomJoinStrategy` logic, mappers.
+  JUnit5 + Mockito + AssertJ.
+- **Integration** — `@SpringBootTest` with **Testcontainers** (MySQL + Redis). Real Flyway
+  migrations run.
+- **Concurrency acceptance test (required, headline)** — for **each** of the three
+  strategies: spin up a capacity-4 room, launch 100 threads via `ExecutorService`, release
+  them simultaneously with a `CountDownLatch`, assert **exactly 4** joins succeed, 96 get
+  `RoomFullException`, and the DB row count == 4. Parameterize over the strategy.
+- **WebSocket integration** — connect a real `WebSocketStompClient`, subscribe to a room
+  topic, trigger a join via REST, assert the `MEMBER_JOINED` event is received.
+- **REST slice** — MockMvc for controllers incl. validation + error envelope.
+- Target ≥ 70% line coverage on the service layer (JaCoCo report).
+
+The build must fail if any test fails. CI runs the full suite.
+
+---
+
+## 9. Project Structure
+
+```
+src/main/java/com/studylog
+├── StudyLogApplication.java
+├── config/        # security, websocket, redis, openapi, async/scheduler config
+├── auth/          # oauth2 service, jwt provider, filters, handlers
+├── user/          # entity, repo, service, controller, dto
+├── room/          # entity, repo, service, controller, dto
+│   └── concurrency/  # RoomJoinStrategy + 3 impls + RoomFullException
+├── realtime/      # stomp controllers, in-memory room/presence/timer registry, events
+├── log/           # StudyLogEntry: entity, repo, service, controller
+├── gamification/  # streak service, badge service, room pet service
+├── common/        # error envelope, @RestControllerAdvice, base auditing entity, response wrappers
+src/main/resources
+├── application.yml            # placeholders only, profile-split
+├── db/migration/Vx__*.sql     # Flyway
+src/test/java/com/studylog    # mirrors main; concurrency/ holds the headline test
+Dockerfile · docker-compose.yml · .env.example · .github/workflows/ci.yml · README.md
+```
+
+---
+
+## 10. Build, Container, CI
+
+- `./gradlew build` compiles + runs all tests + produces JaCoCo report.
+- **Dockerfile**: multi-stage (gradle build → slim JRE runtime).
+- **docker-compose.yml**: `app`, `mysql:8`, `redis:7`; healthchecks; app waits for deps.
+  `docker compose up` must bring the whole stack up and the app must boot healthy.
+- **GitHub Actions** (`ci.yml`): on push/PR → set up JDK 21, `./gradlew build` (Testcontainers
+  needs Docker; use the default ubuntu runner which has Docker). Upload coverage report.
+
+---
+
+## 11. Milestone Checklist (work in order; commit + green build after each)
+
+- [ ] **M0 — Scaffold.** Spring Initializr deps, Gradle wrapper, base packages, `application.yml`
+      with profiles (`local`, `test`, `prod`), Flyway `V1` empty baseline, app boots.
+- [ ] **M1 — Domain + persistence.** All entities, repositories, Flyway migrations,
+      auditing, `@DataJpaTest` for repos. Green.
+- [ ] **M2 — Auth.** OAuth2 client config (Google + Kakao), JWT provider + filter, security
+      chain, `/api/users/me`, dev-login for `local`/`test`. Tests for JWT + filter. Green.
+- [ ] **M3 — Rooms + pessimistic join.** Room CRUD, `PessimisticLockJoinStrategy`, leave,
+      member endpoints. **Concurrency acceptance test (pessimistic) passes.** Green.
+- [ ] **M4 — Optimistic + distributed strategies.** Implement the other two, strategy
+      selection via config, Redisson setup. **Concurrency test passes for all three.** Green.
+- [ ] **M5 — Realtime.** WebSocket/STOMP config, CONNECT auth interceptor, presence registry,
+      chat, shared Pomodoro timer + scheduler, room event broadcasting. WebSocket integration
+      test passes. Green.
+- [ ] **M6 — Snapshots + gamification.** StudyLogEntry submit/feed (REST + `NEW_LOG` broadcast),
+      streak calc, badges, RoomPet growth (concurrent-safe). Tests for streak/badge/pet. Green.
+- [ ] **M7 — Docs + ops.** springdoc Swagger UI, JaCoCo, Dockerfile, docker-compose,
+      GitHub Actions CI, README (see §12). Green; `docker compose up` boots healthy.
+
+---
+
+## 12. README.md requirements (for submission)
+
+The README must contain, in Korean or English:
+- Project title + one-paragraph description (스터디 셋로그 컨셉).
+- Architecture overview (a simple diagram or bullet description of layers + realtime + locks).
+- **Concurrency strategy comparison table** (pessimistic vs optimistic vs distributed:
+  mechanism, failure mode, throughput note, when to use) — this is a grading highlight.
+- Tech stack list.
+- How to run locally (`docker compose up`, env vars, dev-login).
+- API summary (link to Swagger UI at `/swagger-ui.html`).
+- Test instructions + note the headline concurrency test.
+- **Placeholder for 2+ screenshots** (e.g., Swagger UI, a passing concurrency test run,
+  docker compose logs) — required by the assignment.
+- Submission header block:
+  ```
+  학번: <YOUR_ID>
+  이름: <YOUR_NAME>
+  과제명: StudyLog — 실시간 스터디 룸 서버
+  GitHub URL: <YOUR_REPO_URL>
+  ```
+
+---
+
+## 13. Definition of Done
+
+- [ ] `./gradlew build` is green (all unit, integration, concurrency, websocket tests pass).
+- [ ] The 3-strategy concurrency acceptance test proves capacity is never exceeded.
+- [ ] OAuth2 login works (real or via dev-login in test profile) and issues a JWT used by
+      both REST and STOMP.
+- [ ] Multi-room realtime works: presence + chat + shared timer + snapshot feed broadcast.
+- [ ] `docker compose up` brings up app + mysql + redis and the app is healthy.
+- [ ] Swagger UI lists all endpoints.
+- [ ] GitHub Actions CI is green on the default branch.
+- [ ] README complete with the concurrency comparison table and screenshot placeholders.
+
+## 14. Guardrails (do not violate)
+
+- Never commit secrets/keys. Use env placeholders + `.env.example`.
+- Never weaken or skip the concurrency acceptance test to make the build pass.
+- Keep each milestone's build green before moving on; commit per milestone.
+- No feature creep beyond this spec. If something is ambiguous, choose the simplest option
+  that satisfies the Definition of Done and note the assumption in the commit message.
+- Constructor injection, DTO boundaries, no business logic in controllers.
