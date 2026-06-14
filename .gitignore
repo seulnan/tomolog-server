@@ -1,0 +1,26 @@
+# Build output
+build/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.classpath
+*.project
+.settings/
+
+# OS
+.DS_Store
+
+# Secrets / local env (SPEC §2: never commit secrets)
+.env
+.env.local
+*.local.yml
+
+# Claude Code local overrides (machine-specific; settings.json is committed)
+.claude/settings.local.json
+
+# Logs (Ralph loop output)
+logs/

@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<ruleset name="StudyLog PMD rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        StudyLog curated ruleset (CLAUDE.md §2.1 / §3): cyclomatic complexity &lt;= 10,
+        no empty catch, no swallowed/ignored exceptions. Fails the build on violation.
+    </description>
+
+    <!-- Cyclomatic complexity <= 10 -->
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="methodReportLevel" value="10"/>
+            <property name="classReportLevel" value="40"/>
+        </properties>
+    </rule>
+
+    <!-- No empty / swallowed catch blocks -->
+    <rule ref="category/java/errorprone.xml/EmptyCatchBlock">
+        <properties>
+            <property name="allowCommentedBlocks" value="false"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/ExceptionAsFlowControl"/>
+    <rule ref="category/java/errorprone.xml/AvoidCatchingThrowable"/>
+    <rule ref="category/java/errorprone.xml/AvoidRethrowingException"/>
+    <rule ref="category/java/bestpractices.xml/PreserveStackTrace"/>
+
+    <!-- Empty statements / blocks -->
+    <rule ref="category/java/errorprone.xml/EmptyControlStatement"/>
+
+    <!-- Constructor injection hygiene: catch obvious dead code -->
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
+</ruleset>

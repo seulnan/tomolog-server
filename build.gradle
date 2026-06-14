@@ -1,0 +1,158 @@
+// StudyLog — Gradle build with deterministic quality gates (CLAUDE.md §2.1 / §3).
+//
+// `build` depends on every gate, so a green `./gradlew build` proves:
+//   spotlessCheck · checkstyleMain · pmdMain · test · jacocoTestCoverageVerification · ArchUnit
+// Coverage thresholds (§3): service/concurrency/gamification line >= 80%, overall >= 70%.
+//
+// NOTE: the Gradle wrapper (`gradlew`, `gradle/wrapper/*`) is generated in M0 via
+// `gradle wrapper --gradle-version 8.x`. This file defines the gates M0 must keep green.
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.5'
+    id 'io.spring.dependency-management' version '1.1.6'
+    id 'com.diffplug.spotless' version '6.25.0'
+    id 'checkstyle'
+    id 'pmd'
+    id 'jacoco'
+}
+
+group = 'com.studylog'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // --- Spring Boot starters (SPEC §2) ---
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Distributed lock
+    implementation 'org.redisson:redisson-spring-boot-starter:3.34.1'
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+    // Migrations
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
+    // API docs
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+    // DB driver
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // --- Test (SPEC §8) ---
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:mysql'
+    // ArchUnit — enforces layering (CLAUDE.md §3, exercised by src/test/.../arch/)
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.3.0'
+
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// ---------------------------------------------------------------------------
+// Spotless — Google Java Format. `spotlessCheck` fails the build on unformatted
+// code; the PostToolUse hook runs `spotlessApply` after every edit (§2.2).
+// ---------------------------------------------------------------------------
+spotless {
+    java {
+        googleJavaFormat('1.23.0')
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+        target 'src/**/*.java'
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Checkstyle — naming, no star imports, method/file size, Javadoc, no System.out.
+// ---------------------------------------------------------------------------
+checkstyle {
+    toolVersion = '10.18.2'
+    configFile = file('config/checkstyle/checkstyle.xml')
+    maxWarnings = 0
+    maxErrors = 0
+}
+// Gate on production code; tests are checked for style too but never block on Javadoc.
+checkstyleTest {
+    enabled = true
+}
+
+// ---------------------------------------------------------------------------
+// PMD — cyclomatic complexity <= 10, no empty catch, no swallowed exceptions.
+// ---------------------------------------------------------------------------
+pmd {
+    toolVersion = '7.7.0'
+    ruleSetFiles = files('config/pmd/ruleset.xml')
+    ruleSets = []          // use only our curated ruleset
+    consoleOutput = true
+    ignoreFailures = false
+}
+
+// ---------------------------------------------------------------------------
+// Test + JaCoCo
+// ---------------------------------------------------------------------------
+tasks.named('test') {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+// Coverage verification — CLAUDE.md §3. Per-package >= 80% for the critical
+// layers, overall bundle >= 70%. Tuning these DOWN is blocked by guard-edit.sh.
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    violationRules {
+        rule {
+            element = 'BUNDLE'
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.70
+            }
+        }
+        rule {
+            element = 'PACKAGE'
+            includes = [
+                'com.studylog.*.service',
+                'com.studylog.room.concurrency',
+                'com.studylog.gamification',
+            ]
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// `build` ties every gate together: green build == all gates pass (§2.1).
+// ---------------------------------------------------------------------------
+tasks.named('check') {
+    dependsOn 'spotlessCheck', 'jacocoTestCoverageVerification'
+}

@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+  StudyLog Checkstyle config (CLAUDE.md §2.1 / §3).
+  Enforces: naming, no star imports, method <= 40 lines, file <= 300 lines,
+  Javadoc on public service/API methods, no System.out. Suppress nothing —
+  refactor instead (§3). Violations fail the build (maxWarnings = 0).
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <!-- File length <= 300 lines -->
+    <module name="FileLength">
+        <property name="max" value="300"/>
+    </module>
+
+    <!-- No System.out / System.err / printStackTrace -->
+    <module name="RegexpSingleline">
+        <property name="format" value="System\.(out|err)\."/>
+        <property name="message" value="Use SLF4J, not System.out/err (CLAUDE.md §3)."/>
+    </module>
+    <module name="RegexpSingleline">
+        <property name="format" value="printStackTrace\(\)"/>
+        <property name="message" value="No printStackTrace — log with context (CLAUDE.md §3)."/>
+    </module>
+
+    <module name="TreeWalker">
+        <!-- Naming conventions (standard Java) -->
+        <module name="PackageName"/>
+        <module name="TypeName"/>
+        <module name="MethodName"/>
+        <module name="MemberName"/>
+        <module name="ParameterName"/>
+        <module name="LocalVariableName"/>
+        <module name="ConstantName"/>
+
+        <!-- No star imports, no unused/redundant imports -->
+        <module name="AvoidStarImport"/>
+        <module name="UnusedImports"/>
+        <module name="RedundantImport"/>
+
+        <!-- Method length <= 40 lines -->
+        <module name="MethodLength">
+            <property name="tokens" value="METHOD_DEF"/>
+            <property name="max" value="40"/>
+            <property name="countEmpty" value="false"/>
+        </module>
+
+        <!-- Javadoc required on public methods of *Service and *Controller classes.
+             Scoped via the SuppressionXpath below so only public API/service surface
+             is required to document (CLAUDE.md §2.1). -->
+        <module name="MissingJavadocMethod">
+            <property name="scope" value="public"/>
+            <property name="allowMissingPropertyJavadoc" value="true"/>
+            <property name="id" value="apiJavadoc"/>
+        </module>
+        <module name="SuppressionXpathSingleFilter">
+            <property name="checks" value="MissingJavadocMethod"/>
+            <property name="query"
+                      value="//CLASS_DEF[not(matches(./IDENT[1]/@text, '.*(Service|Controller)$'))]/descendant::METHOD_DEF"/>
+        </module>
+
+        <!-- Common correctness nits -->
+        <module name="EmptyBlock">
+            <property name="option" value="text"/>
+            <property name="tokens" value="LITERAL_CATCH"/>
+        </module>
+        <module name="EqualsHashCode"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+    </module>
+</module>

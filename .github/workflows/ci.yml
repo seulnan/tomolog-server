@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest   # has Docker, required by Testcontainers (SPEC §10)
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build + full gate
+        # build ties together spotlessCheck, checkstyle, pmd, test (incl. ArchUnit +
+        # headline concurrency test) and jacocoTestCoverageVerification (CLAUDE.md §2.1).
+        run: ./gradlew build --no-daemon
+
+      - name: Upload JaCoCo coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: build/reports/jacoco/test/html
+          if-no-files-found: ignore

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Conventional Commits validator (CLAUDE.md §2.7 / §4).
+# Enable with:  git config core.hooksPath scripts
+#
+# Rejects commits whose subject does not match:
+#   <type>(<scope>): <imperative summary>     scope optional
+# Types: feat fix refactor test docs chore perf build ci
+set -euo pipefail
+
+msg_file="$1"
+subject="$(head -n1 "$msg_file")"
+
+# Allow merge commits and reverts through untouched.
+case "$subject" in
+  "Merge "*|"Revert "*) exit 0 ;;
+esac
+
+pattern='^(feat|fix|refactor|test|docs|chore|perf|build|ci)(\([a-z0-9._/-]+\))?(!)?: .{1,72}$'
+
+if ! echo "$subject" | grep -Eq "$pattern"; then
+  cat >&2 <<'EOF'
+COMMIT REJECTED — subject is not a valid Conventional Commit (CLAUDE.md §4).
+
+Expected:  <type>(<scope>): <imperative summary <= 72 chars>
+Types:     feat fix refactor test docs chore perf build ci
+Example:   feat(room): add pessimistic-lock join strategy
+
+Body should answer What / Why (the diff already shows How).
+EOF
+  exit 1
+fi
+
+exit 0
