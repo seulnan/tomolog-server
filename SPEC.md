@@ -245,7 +245,7 @@ Dockerfile · docker-compose.yml · .env.example · .github/workflows/ci.yml · 
 
 ## 11. Milestone Checklist (work in order; commit + green build after each)
 
-- [ ] **M0 — Scaffold.** Spring Initializr deps, Gradle wrapper, base packages, `application.yml`
+- [x] **M0 — Scaffold.** Spring Initializr deps, Gradle wrapper, base packages, `application.yml`
       with profiles (`local`, `test`, `prod`), Flyway `V1` empty baseline, app boots.
 - [ ] **M1 — Domain + persistence.** All entities, repositories, Flyway migrations,
       auditing, `@DataJpaTest` for repos. Green.
