@@ -25,11 +25,11 @@
     </rule>
     <rule ref="category/java/design.xml/ExceptionAsFlowControl"/>
     <rule ref="category/java/errorprone.xml/AvoidCatchingThrowable"/>
-    <rule ref="category/java/errorprone.xml/AvoidRethrowingException"/>
+    <rule ref="category/java/design.xml/AvoidRethrowingException"/>
     <rule ref="category/java/bestpractices.xml/PreserveStackTrace"/>
 
     <!-- Empty statements / blocks -->
-    <rule ref="category/java/errorprone.xml/EmptyControlStatement"/>
+    <rule ref="category/java/codestyle.xml/EmptyControlStatement"/>
 
     <!-- Constructor injection hygiene: catch obvious dead code -->
     <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
