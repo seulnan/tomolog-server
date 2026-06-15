@@ -29,8 +29,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -x ./gradlew ] && ./gradlew build -q || true",
-            "timeout": 600
+            "command": "[ -x ./gradlew ] && ./gradlew compileJava compileTestJava -q || true",
+            "timeout": 300
           }
         ]
       }

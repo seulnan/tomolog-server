@@ -1,0 +1,78 @@
+# StudyLog configuration — placeholders only, never commit secrets (SPEC §2).
+# Profiles: local (dev), test (Testcontainers injects datasource/redis), prod (env-driven).
+spring:
+  application:
+    name: studylog
+  profiles:
+    default: local
+  jpa:
+    hibernate:
+      ddl-auto: validate          # schema is owned by Flyway, JPA only validates (SPEC §3)
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+# Application-specific knobs (SPEC §4 / §7).
+studylog:
+  join-strategy: PESSIMISTIC      # PESSIMISTIC | OPTIMISTIC | DISTRIBUTED
+
+---
+# --- local: developer machine; sensible localhost defaults, dev-login on ---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/studylog?serverTimezone=UTC&characterEncoding=UTF-8}
+    username: ${DB_USERNAME:studylog}
+    password: ${DB_PASSWORD:studylog}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  jpa:
+    properties:
+      hibernate:
+        show_sql: true
+
+studylog:
+  auth:
+    dev-login-enabled: true       # SPEC §7: only in local/test
+
+---
+# --- test: Testcontainers supplies datasource + redis via @DynamicPropertySource ---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+studylog:
+  auth:
+    dev-login-enabled: true
+
+---
+# --- prod: everything from the environment, no baked-in secrets ---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+studylog:
+  auth:
+    dev-login-enabled: false

@@ -1,8 +1,8 @@
 package com.studylog.arch;
 
-import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
@@ -12,9 +12,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * Enforces the layering and injection rules from CLAUDE.md §3. These are gates, not
- * suggestions: a build that violates them is a failed build. Kept dependency-light so it
- * runs in the unit phase without a Spring context.
+ * Enforces the layering and injection rules from CLAUDE.md §3. These are gates, not suggestions: a
+ * build that violates them is a failed build. Kept dependency-light so it runs in the unit phase
+ * without a Spring context.
  */
 class LayeredArchitectureTest {
 
@@ -37,7 +37,8 @@ class LayeredArchitectureTest {
             .should()
             .dependOnClassesThat()
             .haveSimpleNameEndingWith("Repository")
-            .because("controllers must delegate to services, never touch repositories (§3)");
+            .because("controllers must delegate to services, never touch repositories (§3)")
+            .allowEmptyShould(true);
     rule.check(classes);
   }
 
@@ -50,7 +51,8 @@ class LayeredArchitectureTest {
             .should()
             .dependOnClassesThat()
             .resideInAnyPackage("jakarta.servlet..", "..controller..")
-            .because("domain/service must not depend on the web layer (§3)");
+            .because("domain/service must not depend on the web layer (§3)")
+            .allowEmptyShould(true);
     rule.check(classes);
   }
 

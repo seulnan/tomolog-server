@@ -20,6 +20,11 @@ plugins {
 group = 'com.studylog'
 version = '0.0.1-SNAPSHOT'
 
+// Override the Spring-Boot-managed Testcontainers version. The Boot 3.3 default bundles a
+// docker-java that negotiates Docker API 1.32, which Docker 29+ rejects (minimum 1.40).
+// Setting this property is the sanctioned way to bump a Boot-managed dependency. LEDGER-004.
+ext['testcontainers.version'] = '1.21.4'
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
@@ -86,12 +91,15 @@ spotless {
 checkstyle {
     toolVersion = '10.18.2'
     configFile = file('config/checkstyle/checkstyle.xml')
+    // Production code uses standard Java method names (no underscores).
+    configProperties = ['methodNameFormat': '^[a-z][a-zA-Z0-9]*$']
     maxWarnings = 0
     maxErrors = 0
 }
-// Gate on production code; tests are checked for style too but never block on Javadoc.
-checkstyleTest {
-    enabled = true
+// Tests follow the charter's BDD naming (methodUnderTest_givenX_thenY, §3), so the test
+// task allows underscores in method names. Same ruleset otherwise.
+tasks.named('checkstyleTest') {
+    configProperties = ['methodNameFormat': '^[a-z][a-zA-Z0-9_]*$']
 }
 
 // ---------------------------------------------------------------------------
@@ -113,11 +121,23 @@ tasks.named('test') {
     finalizedBy jacocoTestReport
 }
 
+// Excluded from coverage: the Spring Boot entry point (its main() is not exercised by
+// tests and carries no business logic). Recorded as a ledger decision, not a silent tweak.
+def coverageExclusions = [
+    '**/StudyLogApplication.class',
+]
+
 jacocoTestReport {
     dependsOn test
     reports {
         xml.required = true
         html.required = true
+    }
+    afterEvaluate {
+        classDirectories.setFrom(
+            files(classDirectories.files.collect { dir ->
+                fileTree(dir: dir, exclude: coverageExclusions)
+            }))
     }
 }
 
@@ -125,6 +145,12 @@ jacocoTestReport {
 // layers, overall bundle >= 70%. Tuning these DOWN is blocked by guard-edit.sh.
 jacocoTestCoverageVerification {
     dependsOn jacocoTestReport
+    afterEvaluate {
+        classDirectories.setFrom(
+            files(classDirectories.files.collect { dir ->
+                fileTree(dir: dir, exclude: coverageExclusions)
+            }))
+    }
     violationRules {
         rule {
             element = 'BUNDLE'
