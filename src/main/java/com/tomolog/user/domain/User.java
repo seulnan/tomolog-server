@@ -66,6 +66,11 @@ public class User extends BaseTimeEntity {
     this.avatarType = avatarType;
   }
 
+  public void updateProfile(String nickname, AvatarType avatarType) {
+    this.nickname = nickname;
+    this.avatarType = avatarType;
+  }
+
   public OauthProvider getOauthProvider() {
     return oauthProvider;
   }
