@@ -71,6 +71,21 @@ public class User extends BaseTimeEntity {
     this.avatarType = avatarType;
   }
 
+  /**
+   * Records a study session: adds minutes and advances the daily streak. Studying the next calendar
+   * day extends the streak; a gap resets it to 1; multiple sessions the same day keep it.
+   */
+  public void recordStudy(int minutes, LocalDate today) {
+    this.totalStudyMinutes += minutes;
+    if (lastStudyDate == null || lastStudyDate.plusDays(1).equals(today)) {
+      this.currentStreak = lastStudyDate == null ? 1 : currentStreak + 1;
+    } else if (!lastStudyDate.equals(today)) {
+      this.currentStreak = 1;
+    }
+    this.longestStreak = Math.max(longestStreak, currentStreak);
+    this.lastStudyDate = today;
+  }
+
   public OauthProvider getOauthProvider() {
     return oauthProvider;
   }
