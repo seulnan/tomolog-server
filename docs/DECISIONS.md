@@ -99,3 +99,16 @@ Entry schema:
 - 영향 범위: `build.gradle`(postgresql 드라이버·flyway-database-postgresql·testcontainers
   postgresql), `application.yml`(jdbc:postgresql), 부팅 스모크 테스트, SPEC §2/§3/§10 표기.
   SPEC §2 locked 스택을 사용자 승인으로 변경함.
+
+### [LEDGER-007] 4계층 아키텍처를 적용할 것인가?
+- Status: OPEN
+- 도메인 맥락: 사용자가 "4계층 적용" 의사를 밝혔고, 일단은 나중에 적용하기로 했다(2026-06-19).
+  현재 구조는 기능별 패키지(web / service / domain / repository) — 사실상 계층은 나뉘어
+  있으나, JPA 엔티티가 곧 도메인 모델 역할을 겸하고 있다. "4계층"이 (a) presentation /
+  application / domain / infrastructure 의 엄격한 분리(도메인 모델과 JPA 엔티티 분리,
+  매퍼 도입)인지, (b) 지금의 web/service/domain/repository를 ArchUnit으로 더 강하게
+  강제하는 것인지 확인 필요.
+- 고려한 선택지: A) 현행 기능별 4패키지 유지(+ArchUnit 강화) / B) 도메인-인프라 분리한
+  정식 4계층(엔티티↔도메인 매퍼 추가)
+- 잠정 선택: 보류 — 다음 마일스톤 진행 후 사용자와 범위 확정. 그 전까지는 현행 구조 유지.
+- 영향 범위: 전체 패키지 구조, ArchUnit 규칙, 매퍼 계층(도입 시).
