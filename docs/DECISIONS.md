@@ -128,5 +128,8 @@ Entry schema:
 - 해소: B 채택. 실측: 2000정원 테마방에 2500스레드 동시 입장 → 정확히 2000, 884 joins/s,
   drift 없음. cap 가드(count<capacity)를 빼니 2500 전부 입장(RED) → 가드가 진짜임을 입증.
   leave도 타입별 분기(THEMED는 원자적 decrement). 확인자 사용자, 2026-06-19.
+- 부하 한계(stressTest, 로컬 실측): 단일 핫룸은 행-락 직렬화로 ~500~750 joins/s에서 천장
+  (2만 동시 시도에도 정확히 2000, 에러 0 — 정확성 불변). 10개 방 분산 시 ~4,163 joins/s로
+  약 6배 — 수평 확장. 즉 정확성은 안 터지고, 단일 방 처리량 한계는 그 방의 행-갱신 속도다.
 - 영향 범위: Room(type·capacity 상한·host nullable), Flyway V3(시드 5), AtomicUpdateJoinStrategy,
   RoomService 라우팅, SPEC §3/§4.

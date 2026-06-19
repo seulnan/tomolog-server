@@ -23,16 +23,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * Load test for large THEMED rooms (LEDGER-008): a capacity-2000 room is hit by 2500 concurrent
+ * Load test for large THEMED rooms (LEDGER-008): a capacity-2000 room is hit by 5000 concurrent
  * join attempts routed through the atomic-counter strategy. Proves capacity holds exactly at 2000
- * under heavy contention, and logs throughput. NOT {@code @Transactional} — the room is committed
- * before launch and each join is its own transaction.
+ * under heavy contention, and logs throughput. Heavier ramp/breaking-point exploration lives in the
+ * tag-separated {@code StressTest} (run via {@code ./gradlew stressTest}). NOT
+ * {@code @Transactional} — the room is committed before launch and each join is its own
+ * transaction.
  */
 class ThemedRoomLoadTest extends AbstractIntegrationTest {
 
   private static final Logger log = LoggerFactory.getLogger(ThemedRoomLoadTest.class);
   private static final int CAPACITY = 2000;
-  private static final int ATTEMPTS = 2500;
+  private static final int ATTEMPTS = 5000;
 
   @Autowired private RoomService roomService;
   @Autowired private RoomRepository roomRepository;
@@ -80,7 +82,7 @@ class ThemedRoomLoadTest extends AbstractIntegrationTest {
   }
 
   @Test
-  void themedRoom_under2500ConcurrentJoins_capsAtExactly2000() throws InterruptedException {
+  void themedRoom_under5000ConcurrentJoins_capsAtExactly2000() throws InterruptedException {
     Long roomId = newThemedRoom();
 
     Counts c = runConcurrentJoins(roomId, ATTEMPTS);
