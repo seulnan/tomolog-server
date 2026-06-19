@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<!--
+  Per-method Javadoc (MissingJavadocMethod / apiJavadoc) is required only on the public
+  service/controller API surface (CLAUDE.md §2.1). Entities, repositories, DTOs, config and
+  the application entry point do not need per-method Javadoc, so suppress it there by path.
+  Service/controller files are not matched here, so the rule still fires for them.
+-->
+<suppressions>
+  <suppress checks="MissingJavadocMethod"
+            files="[/\\](domain|repository|dto|config)[/\\]"/>
+  <suppress checks="MissingJavadocMethod" files="Application\.java$"/>
+</suppressions>
