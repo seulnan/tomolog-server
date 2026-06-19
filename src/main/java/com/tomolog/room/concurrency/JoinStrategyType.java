@@ -6,5 +6,7 @@ package com.tomolog.room.concurrency;
 public enum JoinStrategyType {
   PESSIMISTIC,
   OPTIMISTIC,
-  DISTRIBUTED
+  DISTRIBUTED,
+  // High-throughput strategy used for large THEMED rooms (atomic conditional counter update).
+  ATOMIC
 }
