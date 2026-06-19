@@ -20,6 +20,7 @@ public class PomodoroTimerService {
     this.broadcaster = broadcaster;
   }
 
+  /** Applies a host control (START/PAUSE/SKIP) and broadcasts the resulting timer state. */
   public void control(Long roomId, TimerAction action) {
     RoomLiveState state = registry.get(roomId);
     switch (action) {
@@ -29,6 +30,7 @@ public class PomodoroTimerService {
     }
   }
 
+  /** Advances every running room timer by one tick, broadcasting tick / phase-change events. */
   public void tickAll() {
     for (Long roomId : registry.activeRoomIds()) {
       RoomLiveState state = registry.get(roomId);

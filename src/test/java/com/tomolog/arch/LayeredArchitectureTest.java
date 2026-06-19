@@ -1,7 +1,7 @@
 package com.tomolog.arch;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
@@ -12,9 +12,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * Enforces the layering and injection rules from CLAUDE.md §3. These are gates, not suggestions: a
- * build that violates them is a failed build. Kept dependency-light so it runs in the unit phase
- * without a Spring context.
+ * Enforces the 4-layer architecture (LEDGER-007): presentation → application → domain, with
+ * infrastructure as the outer adapter layer depending inward only. domain depends on no other
+ * layer. These are gates, not suggestions — a violating build fails (CLAUDE.md §3).
  */
 class LayeredArchitectureTest {
 
@@ -29,30 +29,44 @@ class LayeredArchitectureTest {
   }
 
   @Test
-  void controllers_dependOnServicesOnly_notRepositories() {
+  void layersRespectTheirDependencyDirection() {
     ArchRule rule =
-        noClasses()
-            .that()
-            .haveSimpleNameEndingWith("Controller")
-            .should()
-            .dependOnClassesThat()
-            .haveSimpleNameEndingWith("Repository")
-            .because("controllers must delegate to services, never touch repositories (§3)")
-            .allowEmptyShould(true);
+        layeredArchitecture()
+            .consideringOnlyDependenciesInLayers()
+            .layer("Presentation")
+            .definedBy("com.tomolog.presentation..")
+            .layer("Application")
+            .definedBy("com.tomolog.application..")
+            .layer("Domain")
+            .definedBy("com.tomolog.domain..")
+            .layer("Infrastructure")
+            .definedBy("com.tomolog.infrastructure..")
+            // Who may be accessed by whom:
+            .whereLayer("Presentation")
+            .mayNotBeAccessedByAnyLayer()
+            .whereLayer("Application")
+            .mayOnlyBeAccessedByLayers("Presentation", "Infrastructure")
+            .whereLayer("Domain")
+            .mayOnlyBeAccessedByLayers("Presentation", "Application", "Infrastructure")
+            .whereLayer("Infrastructure")
+            .mayNotBeAccessedByAnyLayer()
+            .because("presentation→application→domain; infrastructure is an inward-only adapter");
     rule.check(classes);
   }
 
   @Test
-  void domainAndService_doNotDependOnWebLayer() {
+  void domain_dependsOnNoOtherLayer() {
     ArchRule rule =
-        noClasses()
+        com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses()
             .that()
-            .resideInAnyPackage("..service..", "..domain..", "..concurrency..", "..gamification..")
+            .resideInAPackage("com.tomolog.domain..")
             .should()
             .dependOnClassesThat()
-            .resideInAnyPackage("jakarta.servlet..", "..controller..")
-            .because("domain/service must not depend on the web layer (§3)")
-            .allowEmptyShould(true);
+            .resideInAnyPackage(
+                "com.tomolog.application..",
+                "com.tomolog.presentation..",
+                "com.tomolog.infrastructure..")
+            .because("the domain layer must not depend on any outer layer");
     rule.check(classes);
   }
 
@@ -62,22 +76,18 @@ class LayeredArchitectureTest {
         fields()
             .should()
             .notBeAnnotatedWith("org.springframework.beans.factory.annotation.Autowired")
-            .because("constructor injection only — no field @Autowired (§3)")
-            // Before any beans exist (early M0) there are no fields to match; don't fail
-            // vacuously and wedge the loop's first gate run. Enforced once code lands.
-            .allowEmptyShould(true);
+            .because("constructor injection only — no field @Autowired (§3)");
     rule.check(classes);
   }
 
   @Test
-  void noPackageCycles() {
+  void noLayerCycles() {
     ArchRule rule =
         slices()
             .matching("com.tomolog.(*)..")
             .should()
             .beFreeOfCycles()
-            .because("no cyclic dependencies between feature packages (§3)")
-            .allowEmptyShould(true);
+            .because("no cyclic dependencies between layers (§3)");
     rule.check(classes);
   }
 }

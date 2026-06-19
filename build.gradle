@@ -177,11 +177,12 @@ jacocoTestCoverageVerification {
             }
         }
         rule {
+            // Logic layers ≥ 80% (4-layer arch, LEDGER-007): application use-cases and the
+            // concurrency strategy implementations.
             element = 'PACKAGE'
             includes = [
-                'com.tomolog.*.service',
-                'com.tomolog.room.concurrency',
-                'com.tomolog.gamification',
+                'com.tomolog.application.*',
+                'com.tomolog.infrastructure.concurrency',
             ]
             limit {
                 counter = 'LINE'
