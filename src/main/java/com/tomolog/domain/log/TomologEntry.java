@@ -1,46 +1,50 @@
 package com.tomolog.domain.log;
 
-import com.tomolog.domain.common.BaseTimeEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 
 /**
- * A "셋로그" study snapshot a member drops at the end of a focus cycle: an emoji, a short memo and how
- * many minutes they studied (SPEC §3).
+ * A "셋로그" study snapshot — a pure domain model. A member drops an emoji, a short memo and how many
+ * minutes they studied at the end of a focus cycle (SPEC §3). Created once, never mutated.
  */
-@Entity
-@Table(name = "tomolog_entries")
-public class TomologEntry extends BaseTimeEntity {
+public class TomologEntry {
 
-  @Column(name = "room_id", nullable = false)
-  private Long roomId;
+  private final Long id;
+  private final Long roomId;
+  private final Long userId;
+  private final int cycleNumber;
+  private final String emoji;
+  private final String memo;
+  private final int studiedMinutes;
+  private final LocalDateTime createdAt;
 
-  @Column(name = "user_id", nullable = false)
-  private Long userId;
-
-  @Column(name = "cycle_number", nullable = false)
-  private int cycleNumber;
-
-  @Column(nullable = false, length = 8)
-  private String emoji;
-
-  @Column(length = 100)
-  private String memo;
-
-  @Column(name = "studied_minutes", nullable = false)
-  private int studiedMinutes;
-
-  protected TomologEntry() {}
-
+  /** Creates a new snapshot (no id/timestamp yet). */
   public TomologEntry(
       Long roomId, Long userId, int cycleNumber, String emoji, String memo, int studiedMinutes) {
+    this(null, roomId, userId, cycleNumber, emoji, memo, studiedMinutes, null);
+  }
+
+  /** Full constructor used by the persistence mapper. */
+  public TomologEntry(
+      Long id,
+      Long roomId,
+      Long userId,
+      int cycleNumber,
+      String emoji,
+      String memo,
+      int studiedMinutes,
+      LocalDateTime createdAt) {
+    this.id = id;
     this.roomId = roomId;
     this.userId = userId;
     this.cycleNumber = cycleNumber;
     this.emoji = emoji;
     this.memo = memo;
     this.studiedMinutes = studiedMinutes;
+    this.createdAt = createdAt;
+  }
+
+  public Long getId() {
+    return id;
   }
 
   public Long getRoomId() {
@@ -65,5 +69,9 @@ public class TomologEntry extends BaseTimeEntity {
 
   public int getStudiedMinutes() {
     return studiedMinutes;
+  }
+
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
   }
 }
