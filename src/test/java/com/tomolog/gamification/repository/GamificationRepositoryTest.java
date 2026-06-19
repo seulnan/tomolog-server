@@ -8,12 +8,16 @@ import com.tomolog.domain.gamification.BadgeRepository;
 import com.tomolog.domain.gamification.BadgeType;
 import com.tomolog.domain.gamification.RoomPet;
 import com.tomolog.domain.gamification.RoomPetRepository;
+import com.tomolog.infrastructure.persistence.gamification.BadgeMapper;
+import com.tomolog.infrastructure.persistence.gamification.BadgePersistenceAdapter;
 import com.tomolog.support.AbstractRepositoryTest;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 
+@Import({BadgePersistenceAdapter.class, BadgeMapper.class})
 class GamificationRepositoryTest extends AbstractRepositoryTest {
 
   @Autowired private RoomPetRepository roomPetRepository;
@@ -56,9 +60,7 @@ class GamificationRepositoryTest extends AbstractRepositoryTest {
     badgeRepository.save(new Badge(71L, BadgeType.NIGHT_OWL, LocalDateTime.now()));
 
     assertThatThrownBy(
-            () ->
-                badgeRepository.saveAndFlush(
-                    new Badge(71L, BadgeType.NIGHT_OWL, LocalDateTime.now())))
+            () -> badgeRepository.save(new Badge(71L, BadgeType.NIGHT_OWL, LocalDateTime.now())))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 }
