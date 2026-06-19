@@ -69,7 +69,7 @@ Entry schema:
   확인자 (M0 검증), 2026-06-15
 - 영향 범위: `build.gradle` (`ext['testcontainers.version']`), 모든 Testcontainers 테스트.
 
-### [LEDGER-005] StudyLogApplication을 커버리지 측정에서 제외해도 되는가? 빈 번들이 검증을 통과하는가?
+### [LEDGER-005] TomologApplication을 커버리지 측정에서 제외해도 되는가? 빈 번들이 검증을 통과하는가?
 - Status: SETTLED
 - 도메인 맥락: M0에는 비즈니스 로직 클래스가 사실상 없고 엔트리포인트뿐이다. 엔트리포인트의
   main()은 테스트가 실행하지 않으므로 포함하면 커버리지가 바닥나 게이트가 빨강이 된다.

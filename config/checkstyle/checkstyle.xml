@@ -4,7 +4,7 @@
     "https://checkstyle.org/dtds/configuration_1_3.dtd">
 
 <!--
-  StudyLog Checkstyle config (CLAUDE.md §2.1 / §3).
+  tomolog Checkstyle config (CLAUDE.md §2.1 / §3).
   Enforces: naming, no star imports, method <= 40 lines, file <= 300 lines,
   Javadoc on public service/API methods, no System.out. Suppress nothing —
   refactor instead (§3). Violations fail the build (maxWarnings = 0).

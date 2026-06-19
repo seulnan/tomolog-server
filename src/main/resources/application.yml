@@ -1,8 +1,8 @@
-# StudyLog configuration — placeholders only, never commit secrets (SPEC §2).
+# tomolog configuration — placeholders only, never commit secrets (SPEC §2).
 # Profiles: local (dev), test (Testcontainers injects datasource/redis), prod (env-driven).
 spring:
   application:
-    name: studylog
+    name: tomolog
   profiles:
     default: local
   jpa:
@@ -21,7 +21,7 @@ springdoc:
     path: /swagger-ui.html
 
 # Application-specific knobs (SPEC §4 / §7).
-studylog:
+tomolog:
   join-strategy: PESSIMISTIC      # PESSIMISTIC | OPTIMISTIC | DISTRIBUTED
 
 ---
@@ -31,9 +31,9 @@ spring:
     activate:
       on-profile: local
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/studylog?serverTimezone=UTC&characterEncoding=UTF-8}
-    username: ${DB_USERNAME:studylog}
-    password: ${DB_PASSWORD:studylog}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/tomolog?serverTimezone=UTC&characterEncoding=UTF-8}
+    username: ${DB_USERNAME:tomolog}
+    password: ${DB_PASSWORD:tomolog}
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -43,7 +43,7 @@ spring:
       hibernate:
         show_sql: true
 
-studylog:
+tomolog:
   auth:
     dev-login-enabled: true       # SPEC §7: only in local/test
 
@@ -54,7 +54,7 @@ spring:
     activate:
       on-profile: test
 
-studylog:
+tomolog:
   auth:
     dev-login-enabled: true
 
@@ -73,6 +73,6 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
 
-studylog:
+tomolog:
   auth:
     dev-login-enabled: false

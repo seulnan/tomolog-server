@@ -1,4 +1,4 @@
-# AGENTS.md — Operating Contract for the StudyLog Build Agent
+# AGENTS.md — Operating Contract for the tomolog Build Agent
 
 > **Paste this once as the agent's root instruction.** It is the *how*.
 > Your build target (the *what*) is **`SPEC.md`** in the repo root. If `SPEC.md` is

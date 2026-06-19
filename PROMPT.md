@@ -1,4 +1,4 @@
-CLAUDE.md와 SPEC.md에 따라 StudyLog 빌드를 계속하라.
+CLAUDE.md와 SPEC.md에 따라 tomolog 빌드를 계속하라.
 
 1. SPEC.md §11 마일스톤 체크리스트에서 최상단 미체크 마일스톤의 가장 작은 코히어런트 조각을 고른다.
 2. docs/DECISIONS.md를 읽어 SETTLED 답을 적용하고, 새 가정은 OPEN으로 기록한다(ledger 스킬).

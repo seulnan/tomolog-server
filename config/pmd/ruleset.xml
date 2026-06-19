@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
-<ruleset name="StudyLog PMD rules"
+<ruleset name="tomolog PMD rules"
          xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
 
     <description>
-        StudyLog curated ruleset (CLAUDE.md §2.1 / §3): cyclomatic complexity &lt;= 10,
+        tomolog curated ruleset (CLAUDE.md §2.1 / §3): cyclomatic complexity &lt;= 10,
         no empty catch, no swallowed/ignored exceptions. Fails the build on violation.
     </description>
 

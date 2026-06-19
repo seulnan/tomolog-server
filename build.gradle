@@ -1,4 +1,4 @@
-// StudyLog — Gradle build with deterministic quality gates (CLAUDE.md §2.1 / §3).
+// tomolog — Gradle build with deterministic quality gates (CLAUDE.md §2.1 / §3).
 //
 // `build` depends on every gate, so a green `./gradlew build` proves:
 //   spotlessCheck · checkstyleMain · pmdMain · test · jacocoTestCoverageVerification · ArchUnit
@@ -17,7 +17,7 @@ plugins {
     id 'jacoco'
 }
 
-group = 'com.studylog'
+group = 'com.tomolog'
 version = '0.0.1-SNAPSHOT'
 
 // Override the Spring-Boot-managed Testcontainers version. The Boot 3.3 default bundles a
@@ -124,7 +124,7 @@ tasks.named('test') {
 // Excluded from coverage: the Spring Boot entry point (its main() is not exercised by
 // tests and carries no business logic). Recorded as a ledger decision, not a silent tweak.
 def coverageExclusions = [
-    '**/StudyLogApplication.class',
+    '**/TomologApplication.class',
 ]
 
 jacocoTestReport {
@@ -163,9 +163,9 @@ jacocoTestCoverageVerification {
         rule {
             element = 'PACKAGE'
             includes = [
-                'com.studylog.*.service',
-                'com.studylog.room.concurrency',
-                'com.studylog.gamification',
+                'com.tomolog.*.service',
+                'com.tomolog.room.concurrency',
+                'com.tomolog.gamification',
             ]
             limit {
                 counter = 'LINE'

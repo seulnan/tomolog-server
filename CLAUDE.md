@@ -1,4 +1,4 @@
-# CLAUDE.md — StudyLog 빌드 에이전트 운영 헌장 (Claude Code 판)
+# CLAUDE.md — tomolog 빌드 에이전트 운영 헌장 (Claude Code 판)
 
 > **이 파일을 저장소 루트에 두면 클로드 코드가 매 세션 자동으로 읽는다.** 이것은 *어떻게
 > 일하는가*(헌법)이고, *무엇을 만드는가*는 루트의 **`SPEC.md`**다. `SPEC.md`가 없으면
@@ -157,7 +157,7 @@ exit 0
 ### 2.8 루프 하네스
 - `PROMPT.md`(루프 1회 킥오프, 얇게):
   ```
-  CLAUDE.md와 SPEC.md에 따라 StudyLog 빌드를 계속하라. 최상단 미체크 마일스톤의 가장 작은
+  CLAUDE.md와 SPEC.md에 따라 tomolog 빌드를 계속하라. 최상단 미체크 마일스톤의 가장 작은
   조각을 구현하고, 전체 게이트를 green으로 통과시키고, 원자적으로 커밋하고,
   docs/DECISIONS.md를 갱신하고, PR을 열거나 갱신하라. Definition of Done이 모두 충족되면
   ALL_DONE 을 출력하라.

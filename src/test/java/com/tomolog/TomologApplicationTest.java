@@ -1,4 +1,4 @@
-package com.studylog;
+package com.tomolog;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,7 +23,7 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers
 @ActiveProfiles("test")
 @SpringBootTest
-class StudyLogApplicationTest {
+class TomologApplicationTest {
 
   @Container
   static final MySQLContainer<?> MYSQL = new MySQLContainer<>(DockerImageName.parse("mysql:8.0"));

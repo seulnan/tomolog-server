@@ -1,4 +1,4 @@
-# StudyLog — Build Specification (Agent Harness Edition)
+# tomolog — Build Specification (Agent Harness Edition)
 
 > **Single source of truth.** You are an autonomous coding agent running in a loop.
 > Work through the **Milestone Checklist** top to bottom. After **every** task:
@@ -10,7 +10,7 @@
 
 ## 1. Product Overview
 
-**StudyLog** is a backend server for a real-time, multi-room study service with a
+**tomolog** is a backend server for a real-time, multi-room study service with a
 Gen-Z "셋로그 (Setlog)" flavor: friends create a **study room (로그)**, study together
 with a **shared Pomodoro timer**, see each other's live **presence**, and at the end
 of each focus cycle drop a quick **study snapshot** (emoji + one-line memo + minutes)
@@ -81,7 +81,7 @@ Entities (JPA, all with `id BIGINT AUTO_INCREMENT`, `createdAt`, `updatedAt` aud
 - `roomId`, `userId`, `role` (HOST, MEMBER), `presence` (ONLINE, AWAY, OFFLINE), `joinedAt`
 - Unique constraint on `(roomId, userId)`
 
-### StudyLogEntry  *(the "셋로그 snapshot")*
+### TomologEntry  *(the "셋로그 snapshot")*
 - `roomId`, `userId`, `cycleNumber` (int), `emoji`, `memo` (<= 100 chars), `studiedMinutes`, `createdAt`
 
 ### RoomPet  *(shared gamification)*
@@ -101,7 +101,7 @@ validate (`ddl-auto: validate`), not generate.
 
 The **join-room** operation must enforce `currentMemberCount < capacity` atomically.
 Implement a `RoomJoinStrategy` interface with **three** swappable implementations,
-selectable via config property `studylog.join-strategy = PESSIMISTIC | OPTIMISTIC | DISTRIBUTED`.
+selectable via config property `tomolog.join-strategy = PESSIMISTIC | OPTIMISTIC | DISTRIBUTED`.
 
 ```java
 public interface RoomJoinStrategy {
@@ -212,21 +212,21 @@ The build must fail if any test fails. CI runs the full suite.
 ## 9. Project Structure
 
 ```
-src/main/java/com/studylog
-├── StudyLogApplication.java
+src/main/java/com/tomolog
+├── TomologApplication.java
 ├── config/        # security, websocket, redis, openapi, async/scheduler config
 ├── auth/          # oauth2 service, jwt provider, filters, handlers
 ├── user/          # entity, repo, service, controller, dto
 ├── room/          # entity, repo, service, controller, dto
 │   └── concurrency/  # RoomJoinStrategy + 3 impls + RoomFullException
 ├── realtime/      # stomp controllers, in-memory room/presence/timer registry, events
-├── log/           # StudyLogEntry: entity, repo, service, controller
+├── log/           # TomologEntry: entity, repo, service, controller
 ├── gamification/  # streak service, badge service, room pet service
 ├── common/        # error envelope, @RestControllerAdvice, base auditing entity, response wrappers
 src/main/resources
 ├── application.yml            # placeholders only, profile-split
 ├── db/migration/Vx__*.sql     # Flyway
-src/test/java/com/studylog    # mirrors main; concurrency/ holds the headline test
+src/test/java/com/tomolog    # mirrors main; concurrency/ holds the headline test
 Dockerfile · docker-compose.yml · .env.example · .github/workflows/ci.yml · README.md
 ```
 
@@ -258,7 +258,7 @@ Dockerfile · docker-compose.yml · .env.example · .github/workflows/ci.yml · 
 - [ ] **M5 — Realtime.** WebSocket/STOMP config, CONNECT auth interceptor, presence registry,
       chat, shared Pomodoro timer + scheduler, room event broadcasting. WebSocket integration
       test passes. Green.
-- [ ] **M6 — Snapshots + gamification.** StudyLogEntry submit/feed (REST + `NEW_LOG` broadcast),
+- [ ] **M6 — Snapshots + gamification.** TomologEntry submit/feed (REST + `NEW_LOG` broadcast),
       streak calc, badges, RoomPet growth (concurrent-safe). Tests for streak/badge/pet. Green.
 - [ ] **M7 — Docs + ops.** springdoc Swagger UI, JaCoCo, Dockerfile, docker-compose,
       GitHub Actions CI, README (see §12). Green; `docker compose up` boots healthy.
@@ -282,7 +282,7 @@ The README must contain, in Korean or English:
   ```
   학번: <YOUR_ID>
   이름: <YOUR_NAME>
-  과제명: StudyLog — 실시간 스터디 룸 서버
+  과제명: tomolog — 실시간 스터디 룸 서버
   GitHub URL: <YOUR_REPO_URL>
   ```
 

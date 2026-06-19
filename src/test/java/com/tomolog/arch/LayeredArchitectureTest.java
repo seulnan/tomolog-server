@@ -1,4 +1,4 @@
-package com.studylog.arch;
+package com.tomolog.arch;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
@@ -25,7 +25,7 @@ class LayeredArchitectureTest {
     classes =
         new ClassFileImporter()
             .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-            .importPackages("com.studylog");
+            .importPackages("com.tomolog");
   }
 
   @Test
@@ -73,7 +73,7 @@ class LayeredArchitectureTest {
   void noPackageCycles() {
     ArchRule rule =
         slices()
-            .matching("com.studylog.(*)..")
+            .matching("com.tomolog.(*)..")
             .should()
             .beFreeOfCycles()
             .because("no cyclic dependencies between feature packages (§3)")

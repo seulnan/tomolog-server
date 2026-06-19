@@ -5,7 +5,7 @@ tools: Bash, Read, Grep
 model: inherit
 ---
 
-You run StudyLog's quality gate and report back compactly. Your job is to keep verbose
+You run tomolog's quality gate and report back compactly. Your job is to keep verbose
 build output OUT of the main agent's context — return a verdict, not a log dump.
 
 ## What to run
