@@ -46,4 +46,9 @@ public class PessimisticLockJoinStrategy implements RoomJoinStrategy {
     return roomMemberRepository.save(
         new RoomMember(roomId, userId, MemberRole.MEMBER, LocalDateTime.now()));
   }
+
+  @Override
+  public JoinStrategyType type() {
+    return JoinStrategyType.PESSIMISTIC;
+  }
 }

@@ -2,7 +2,7 @@ package com.tomolog.room.service;
 
 import com.tomolog.common.error.ApiException;
 import com.tomolog.common.error.ErrorCode;
-import com.tomolog.room.concurrency.RoomJoinStrategy;
+import com.tomolog.room.concurrency.JoinStrategyResolver;
 import com.tomolog.room.domain.MemberRole;
 import com.tomolog.room.domain.Room;
 import com.tomolog.room.domain.RoomMember;
@@ -17,24 +17,27 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Room lifecycle and membership. The concurrency-guarded join is delegated to a strategy. */
+/**
+ * Room lifecycle and membership. The concurrency-guarded join is delegated to a strategy, which
+ * owns its own transaction — so {@code join} here is deliberately non-transactional, and the read
+ * methods are individually marked read-only.
+ */
 @Service
-@Transactional(readOnly = true)
 public class RoomService {
 
   private static final int MAX_INVITE_CODE_ATTEMPTS = 5;
 
   private final RoomRepository roomRepository;
   private final RoomMemberRepository roomMemberRepository;
-  private final RoomJoinStrategy joinStrategy;
+  private final JoinStrategyResolver joinStrategyResolver;
 
   public RoomService(
       RoomRepository roomRepository,
       RoomMemberRepository roomMemberRepository,
-      RoomJoinStrategy joinStrategy) {
+      JoinStrategyResolver joinStrategyResolver) {
     this.roomRepository = roomRepository;
     this.roomMemberRepository = roomMemberRepository;
-    this.joinStrategy = joinStrategy;
+    this.joinStrategyResolver = joinStrategyResolver;
   }
 
   /** Creates a room and joins the host as its first member. */
@@ -51,6 +54,7 @@ public class RoomService {
   }
 
   /** Lists rooms, optionally filtered by status, newest first. */
+  @Transactional(readOnly = true)
   public Page<Room> listRooms(RoomStatus status, Pageable pageable) {
     return status == null
         ? roomRepository.findAll(pageable)
@@ -58,6 +62,7 @@ public class RoomService {
   }
 
   /** Returns the room or throws {@link ErrorCode#ROOM_NOT_FOUND}. */
+  @Transactional(readOnly = true)
   public Room getRoom(Long roomId) {
     return roomRepository
         .findById(roomId)
@@ -65,17 +70,18 @@ public class RoomService {
   }
 
   /** Returns the room's current members. */
+  @Transactional(readOnly = true)
   public List<RoomMember> getMembers(Long roomId) {
     return roomMemberRepository.findByRoomId(roomId);
   }
 
   /**
-   * Joins a user via the configured concurrency strategy. Marked read-write so the strategy's
-   * {@code SELECT ... FOR UPDATE} does not inherit the class-level read-only transaction.
+   * Joins a user via the configured concurrency strategy. Intentionally not transactional here: the
+   * selected strategy opens and owns its own transaction (optimistic retries each need a fresh
+   * one).
    */
-  @Transactional
   public RoomMember join(Long roomId, Long userId) {
-    return joinStrategy.join(roomId, userId);
+    return joinStrategyResolver.active().join(roomId, userId);
   }
 
   /** Removes the user's membership and decrements the room's counter under a row lock. */
