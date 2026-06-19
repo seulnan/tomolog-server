@@ -2,7 +2,8 @@ package com.tomolog.log.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.tomolog.log.domain.TomologEntry;
+import com.tomolog.domain.log.TomologEntry;
+import com.tomolog.domain.log.TomologEntryRepository;
 import com.tomolog.support.AbstractRepositoryTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

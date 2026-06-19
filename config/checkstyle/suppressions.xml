@@ -10,8 +10,8 @@
   Service/controller files are not matched here, so the rule still fires for them.
 -->
 <suppressions>
-  <!-- Enforce method Javadoc ONLY under service / web / controller packages; suppress it
-       everywhere else (entities, repositories, dto, config, jwt, security, the entry point). -->
+  <!-- Enforce method Javadoc only on the API/use-case surface: *Controller and *Service classes.
+       Everything else (entities, DTOs/records, repositories, config, components) is suppressed. -->
   <suppress checks="MissingJavadocMethod"
-            files="^(?!.*[/\\](service|web|controller)[/\\]).*$"/>
+            files="^(?!.*(Controller|Service)\.java$).*$"/>
 </suppressions>

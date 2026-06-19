@@ -4,7 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tomolog.auth.jwt.JwtProvider;
+import com.tomolog.infrastructure.jwt.JwtProvider;
+import com.tomolog.infrastructure.oauth.OAuth2LoginSuccessHandler;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

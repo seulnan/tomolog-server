@@ -2,9 +2,13 @@ package com.tomolog.room.concurrency;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.tomolog.room.domain.Room;
-import com.tomolog.room.repository.RoomMemberRepository;
-import com.tomolog.room.repository.RoomRepository;
+import com.tomolog.application.room.JoinStrategyResolver;
+import com.tomolog.domain.room.JoinStrategyType;
+import com.tomolog.domain.room.Room;
+import com.tomolog.domain.room.RoomFullException;
+import com.tomolog.domain.room.RoomJoinStrategy;
+import com.tomolog.domain.room.RoomMemberRepository;
+import com.tomolog.domain.room.RoomRepository;
 import com.tomolog.support.AbstractIntegrationTest;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;

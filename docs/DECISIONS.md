@@ -101,17 +101,20 @@ Entry schema:
   SPEC §2 locked 스택을 사용자 승인으로 변경함.
 
 ### [LEDGER-007] 4계층 아키텍처를 적용할 것인가?
-- Status: OPEN
-- 도메인 맥락: 사용자가 "4계층 적용" 의사를 밝혔고, 일단은 나중에 적용하기로 했다(2026-06-19).
-  현재 구조는 기능별 패키지(web / service / domain / repository) — 사실상 계층은 나뉘어
-  있으나, JPA 엔티티가 곧 도메인 모델 역할을 겸하고 있다. "4계층"이 (a) presentation /
-  application / domain / infrastructure 의 엄격한 분리(도메인 모델과 JPA 엔티티 분리,
-  매퍼 도입)인지, (b) 지금의 web/service/domain/repository를 ArchUnit으로 더 강하게
-  강제하는 것인지 확인 필요.
-- 고려한 선택지: A) 현행 기능별 4패키지 유지(+ArchUnit 강화) / B) 도메인-인프라 분리한
-  정식 4계층(엔티티↔도메인 매퍼 추가)
-- 잠정 선택: 보류 — 다음 마일스톤 진행 후 사용자와 범위 확정. 그 전까지는 현행 구조 유지.
-- 영향 범위: 전체 패키지 구조, ArchUnit 규칙, 매퍼 계층(도입 시).
+- Status: SETTLED
+- 도메인 맥락: 사용자가 "4계층 적용" 의사를 밝혔다. 범위를 세 선택지로 제시하고 사용자가 골랐다.
+- 고려한 선택지: A) 계층형 패키지 재구성(presentation/application/domain/infrastructure,
+  JPA 엔티티는 domain 유지·매퍼 없음) / B) 헥사고날(순수 도메인 모델 + 포트/어댑터 + 매퍼)
+  / C) 현행 기능형 유지 + ArchUnit 강화
+- 해소: A 채택 — 확인자 사용자, 2026-06-20. 최상위를 4계층으로 재편(기능은 하위 패키지).
+  리포지토리 인터페이스는 domain에 둠(application→domain만). 계층 강제는 ArchUnit
+  layeredArchitecture로: presentation→application→domain, infrastructure는 안쪽만 의존,
+  domain은 무의존. 계층 순환 누수도 정리(LogService는 요청 DTO 대신 원시 인자, AuthController는
+  infra 토큰발급 대신 application TokenIssuer 포트+AuthService, ErrorResponse→domain·
+  TokenResponse→application 이동). 동작 불변(테스트 무수정). build green, 커버리지 91.7%.
+  커버리지 80% 글롭은 application/infrastructure.concurrency로 재배치 후 깨보기로 실발동 확인
+  (한 패키지를 임시로 기준 밑으로 떨궈 RED 확인 뒤 원복). 체크스타일 Javadoc은 *Controller/*Service로 한정.
+- 영향 범위: 전체 패키지 구조, ArchUnit 규칙, 커버리지·체크스타일 게이트 경로. 매퍼는 미도입(B 보류).
 
 ### [LEDGER-008] 방을 두 종류로 나누고 대규모 입장을 별도 처리한다
 - Status: SETTLED

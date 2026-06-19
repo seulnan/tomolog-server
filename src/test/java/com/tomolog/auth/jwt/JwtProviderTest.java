@@ -2,6 +2,8 @@ package com.tomolog.auth.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.tomolog.infrastructure.jwt.JwtProperties;
+import com.tomolog.infrastructure.jwt.JwtProvider;
 import org.junit.jupiter.api.Test;
 
 class JwtProviderTest {

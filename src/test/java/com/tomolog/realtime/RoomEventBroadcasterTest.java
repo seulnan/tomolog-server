@@ -4,10 +4,11 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
-import com.tomolog.realtime.dto.MemberEventPayload;
-import com.tomolog.realtime.event.RoomEvent;
-import com.tomolog.realtime.event.RoomEventType;
-import com.tomolog.room.event.RoomMembershipChangedEvent;
+import com.tomolog.application.realtime.MemberEventPayload;
+import com.tomolog.application.realtime.RoomEvent;
+import com.tomolog.application.realtime.RoomEventBroadcaster;
+import com.tomolog.application.realtime.RoomEventType;
+import com.tomolog.application.room.RoomMembershipChangedEvent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;

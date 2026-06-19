@@ -3,9 +3,10 @@ package com.tomolog.room.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.tomolog.room.domain.MemberRole;
-import com.tomolog.room.domain.Presence;
-import com.tomolog.room.domain.RoomMember;
+import com.tomolog.domain.room.MemberRole;
+import com.tomolog.domain.room.Presence;
+import com.tomolog.domain.room.RoomMember;
+import com.tomolog.domain.room.RoomMemberRepository;
 import com.tomolog.support.AbstractRepositoryTest;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;

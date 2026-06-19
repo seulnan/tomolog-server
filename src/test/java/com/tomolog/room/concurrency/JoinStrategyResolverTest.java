@@ -3,7 +3,10 @@ package com.tomolog.room.concurrency;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.tomolog.room.domain.RoomMember;
+import com.tomolog.application.room.JoinStrategyResolver;
+import com.tomolog.domain.room.JoinStrategyType;
+import com.tomolog.domain.room.RoomJoinStrategy;
+import com.tomolog.domain.room.RoomMember;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

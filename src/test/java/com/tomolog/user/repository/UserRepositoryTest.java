@@ -2,10 +2,11 @@ package com.tomolog.user.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.tomolog.domain.user.AvatarType;
+import com.tomolog.domain.user.OauthProvider;
+import com.tomolog.domain.user.User;
+import com.tomolog.domain.user.UserRepository;
 import com.tomolog.support.AbstractRepositoryTest;
-import com.tomolog.user.domain.AvatarType;
-import com.tomolog.user.domain.OauthProvider;
-import com.tomolog.user.domain.User;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

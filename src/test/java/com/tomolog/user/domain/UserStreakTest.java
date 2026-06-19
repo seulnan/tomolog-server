@@ -2,6 +2,9 @@ package com.tomolog.user.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.tomolog.domain.user.AvatarType;
+import com.tomolog.domain.user.OauthProvider;
+import com.tomolog.domain.user.User;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 

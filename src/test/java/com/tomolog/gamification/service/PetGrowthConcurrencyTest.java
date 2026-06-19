@@ -2,15 +2,16 @@ package com.tomolog.gamification.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.tomolog.gamification.domain.RoomPet;
-import com.tomolog.gamification.repository.RoomPetRepository;
-import com.tomolog.room.domain.Room;
-import com.tomolog.room.repository.RoomRepository;
+import com.tomolog.application.gamification.GamificationService;
+import com.tomolog.domain.gamification.RoomPet;
+import com.tomolog.domain.gamification.RoomPetRepository;
+import com.tomolog.domain.room.Room;
+import com.tomolog.domain.room.RoomRepository;
+import com.tomolog.domain.user.AvatarType;
+import com.tomolog.domain.user.OauthProvider;
+import com.tomolog.domain.user.User;
+import com.tomolog.domain.user.UserRepository;
 import com.tomolog.support.AbstractIntegrationTest;
-import com.tomolog.user.domain.AvatarType;
-import com.tomolog.user.domain.OauthProvider;
-import com.tomolog.user.domain.User;
-import com.tomolog.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
