@@ -15,6 +15,29 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:dummy-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dummy-google-secret}
+            scope: profile, email
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID:dummy-kakao-client-id}
+            client-secret: ${KAKAO_CLIENT_SECRET:dummy-kakao-secret}
+            client-authentication-method: client_secret_post
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/kakao"
+            scope: profile_nickname, account_email
+            client-name: Kakao
+        provider:
+          # Kakao is not a built-in provider, so its endpoints must be declared explicitly.
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
 
 springdoc:
   swagger-ui:
@@ -23,6 +46,8 @@ springdoc:
 # Application-specific knobs (SPEC §4 / §7).
 tomolog:
   join-strategy: PESSIMISTIC      # PESSIMISTIC | OPTIMISTIC | DISTRIBUTED
+  jwt:
+    access-token-validity-seconds: 3600
 
 ---
 # --- local: developer machine; sensible localhost defaults, dev-login on ---
@@ -44,6 +69,9 @@ spring:
         show_sql: true
 
 tomolog:
+  jwt:
+    # HS256 needs >= 256-bit (32-byte) key. Dev default only; override with JWT_SECRET.
+    secret: ${JWT_SECRET:local-dev-secret-change-me-0123456789-abcdef}
   auth:
     dev-login-enabled: true       # SPEC §7: only in local/test
 
@@ -55,6 +83,8 @@ spring:
       on-profile: test
 
 tomolog:
+  jwt:
+    secret: ${JWT_SECRET:test-secret-change-me-0123456789-abcdefghij}
   auth:
     dev-login-enabled: true
 
@@ -74,5 +104,7 @@ spring:
       port: ${REDIS_PORT}
 
 tomolog:
+  jwt:
+    secret: ${JWT_SECRET}          # no default: prod fails closed if unset
   auth:
     dev-login-enabled: false

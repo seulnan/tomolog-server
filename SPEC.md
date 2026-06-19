@@ -249,7 +249,7 @@ Dockerfile · docker-compose.yml · .env.example · .github/workflows/ci.yml · 
       with profiles (`local`, `test`, `prod`), Flyway `V1` empty baseline, app boots.
 - [x] **M1 — Domain + persistence.** All entities, repositories, Flyway migrations,
       auditing, `@DataJpaTest` for repos. Green.
-- [ ] **M2 — Auth.** OAuth2 client config (Google + Kakao), JWT provider + filter, security
+- [x] **M2 — Auth.** OAuth2 client config (Google + Kakao), JWT provider + filter, security
       chain, `/api/users/me`, dev-login for `local`/`test`. Tests for JWT + filter. Green.
 - [ ] **M3 — Rooms + pessimistic join.** Room CRUD, `PessimisticLockJoinStrategy`, leave,
       member endpoints. **Concurrency acceptance test (pessimistic) passes.** Green.
