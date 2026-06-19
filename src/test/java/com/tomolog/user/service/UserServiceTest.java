@@ -70,6 +70,7 @@ class UserServiceTest {
   void updateProfile_changesNicknameAndAvatar() {
     User user = new User(OauthProvider.GOOGLE, "g-2", "e@x.com", "old", AvatarType.CAT);
     when(userRepository.findById(5L)).thenReturn(Optional.of(user));
+    when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     User result = userService.updateProfile(5L, "new", AvatarType.FROG);
 

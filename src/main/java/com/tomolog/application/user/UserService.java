@@ -49,7 +49,7 @@ public class UserService {
   public User updateProfile(Long userId, String nickname, AvatarType avatarType) {
     User user = getById(userId);
     user.updateProfile(nickname, avatarType);
-    return user;
+    return userRepository.save(user);
   }
 
   private static String emailOrFallback(String email, String oauthId) {
