@@ -267,7 +267,7 @@ Dockerfile · docker-compose.yml · .env.example · .github/workflows/ci.yml · 
       test passes. Green.
 - [x] **M6 — Snapshots + gamification.** TomologEntry submit/feed (REST + `NEW_LOG` broadcast),
       streak calc, badges, RoomPet growth (concurrent-safe). Tests for streak/badge/pet. Green.
-- [ ] **M7 — Docs + ops.** springdoc Swagger UI, JaCoCo, Dockerfile, docker-compose,
+- [x] **M7 — Docs + ops.** springdoc Swagger UI, JaCoCo, Dockerfile, docker-compose,
       GitHub Actions CI, README (see §12). Green; `docker compose up` boots healthy.
 
 ---
@@ -297,15 +297,15 @@ The README must contain, in Korean or English:
 
 ## 13. Definition of Done
 
-- [ ] `./gradlew build` is green (all unit, integration, concurrency, websocket tests pass).
-- [ ] The 3-strategy concurrency acceptance test proves capacity is never exceeded.
-- [ ] OAuth2 login works (real or via dev-login in test profile) and issues a JWT used by
+- [x] `./gradlew build` is green (all unit, integration, concurrency, websocket tests pass).
+- [x] The 3-strategy concurrency acceptance test proves capacity is never exceeded.
+- [x] OAuth2 login works (real or via dev-login in test profile) and issues a JWT used by
       both REST and STOMP.
-- [ ] Multi-room realtime works: presence + chat + shared timer + snapshot feed broadcast.
-- [ ] `docker compose up` brings up app + postgres + redis and the app is healthy.
-- [ ] Swagger UI lists all endpoints.
-- [ ] GitHub Actions CI is green on the default branch.
-- [ ] README complete with the concurrency comparison table and screenshot placeholders.
+- [x] Multi-room realtime works: presence + chat + shared timer + snapshot feed broadcast.
+- [x] `docker compose up` brings up app + postgres + redis and the app is healthy.
+- [x] Swagger UI lists all endpoints.
+- [x] GitHub Actions CI is green on the default branch.
+- [x] README complete with the concurrency comparison table and screenshot placeholders.
 
 ## 14. Guardrails (do not violate)
 
