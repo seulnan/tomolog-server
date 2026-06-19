@@ -124,10 +124,8 @@ public class RoomService {
             .findTypeById(roomId)
             .orElseThrow(() -> new ApiException(ErrorCode.ROOM_NOT_FOUND));
     if (type == RoomType.THEMED) {
-      // Flush the membership delete before the bulk counter update: that query clears the
-      // persistence context, which would otherwise discard the still-pending delete.
+      // The delete adapter flushes, so the bulk counter update below sees the row gone.
       roomMemberRepository.delete(member);
-      roomMemberRepository.flush();
       roomRepository.decreaseMemberCount(roomId);
     } else {
       roomMemberRepository.delete(member);

@@ -2,9 +2,9 @@ package com.tomolog.domain.room;
 
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface RoomMemberRepository extends JpaRepository<RoomMember, Long> {
+/** Domain port for room-membership persistence (plain interface, domain models). */
+public interface RoomMemberRepository {
 
   Optional<RoomMember> findByRoomIdAndUserId(Long roomId, Long userId);
 
@@ -13,4 +13,8 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, Long> {
   long countByRoomId(Long roomId);
 
   boolean existsByRoomIdAndUserId(Long roomId, Long userId);
+
+  RoomMember save(RoomMember member);
+
+  void delete(RoomMember member);
 }
