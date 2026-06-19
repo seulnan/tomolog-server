@@ -10,13 +10,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 /**
- * M0 boot proof (SPEC §11): the application context loads against real MySQL + Redis via
+ * M0 boot proof (SPEC §11): the application context loads against real PostgreSQL + Redis via
  * Testcontainers, Flyway runs the baseline migration, and JPA validation passes. This is the
  * headline "app boots" gate; M1 builds the real persistence layer on top of it.
  */
@@ -26,7 +26,8 @@ import org.testcontainers.utility.DockerImageName;
 class TomologApplicationTest {
 
   @Container
-  static final MySQLContainer<?> MYSQL = new MySQLContainer<>(DockerImageName.parse("mysql:8.0"));
+  static final PostgreSQLContainer<?> POSTGRES =
+      new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"));
 
   @Container
   static final GenericContainer<?> REDIS =
@@ -34,9 +35,9 @@ class TomologApplicationTest {
 
   @DynamicPropertySource
   static void registerProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.datasource.url", MYSQL::getJdbcUrl);
-    registry.add("spring.datasource.username", MYSQL::getUsername);
-    registry.add("spring.datasource.password", MYSQL::getPassword);
+    registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+    registry.add("spring.datasource.username", POSTGRES::getUsername);
+    registry.add("spring.datasource.password", POSTGRES::getPassword);
     registry.add("spring.data.redis.host", REDIS::getHost);
     registry.add("spring.data.redis.port", () -> REDIS.getMappedPort(6379));
   }
@@ -44,7 +45,7 @@ class TomologApplicationTest {
   @Autowired private ApplicationContext context;
 
   @Test
-  void contextLoads_givenMysqlAndRedis_thenApplicationBoots() {
+  void contextLoads_givenPostgresAndRedis_thenApplicationBoots() {
     assertThat(context).isNotNull();
     assertThat(context.getBeanDefinitionCount()).isPositive();
   }

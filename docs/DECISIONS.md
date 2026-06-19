@@ -81,3 +81,21 @@ Entry schema:
   통과(green). M1에서 실클래스가 들어오면 측정 대상이 자연히 채워진다.
   확인자 (M0 검증), 2026-06-15
 - 영향 범위: `build.gradle` (coverageExclusions), 커버리지 게이트.
+
+### [LEDGER-006] DB 엔진을 MySQL에서 PostgreSQL로 바꾼 이유? Supabase는?
+- Status: SETTLED
+- 도메인 맥락: SPEC §2가 MySQL 8을 locked로 못박았으나, 사용자가 대안(Supabase 등)을 열었다.
+  Supabase는 결국 매니지드 Postgres다. 이 과제의 제약 — ① 100스레드 동시성 acceptance
+  테스트(SPEC §8), ② Testcontainers 통합테스트(필수), ③ OAuth2/JWT·STOMP 실시간을 직접
+  구현해 보여주는 채점 — 을 기준으로 평가했다.
+- 고려한 선택지: A) MySQL 유지(재작업 0) / B) PostgreSQL 엔진(로컬·CI는 컨테이너, 배포는
+  Supabase/Neon 등 매니지드 가능) / C) Supabase 서비스 풀활용(Auth·Realtime 매니지드)
+- 잠정 선택: B — 이유: 3가지 락 전략(SELECT FOR UPDATE·@Version·Redisson)·Flyway·
+  Testcontainers가 Postgres에서 동일하게 동작하고, 배포만 매니지드로 열어둘 수 있다.
+  C는 비추 — Auth/Realtime이 §6·§7의 "직접 구현 채점 포인트"와 겹쳐 감점 위험, 100스레드
+  테스트도 원격 DB엔 부적합. 동시성·통합테스트는 어느 쪽이든 컨테이너로 유지.
+- 해소: B 채택 — 확인자 사용자, 2026-06-19. 실측: Postgres로 `./gradlew clean build` green,
+  앱이 PostgreSQL+Redis로 실제 부팅(TomologApplicationTest).
+- 영향 범위: `build.gradle`(postgresql 드라이버·flyway-database-postgresql·testcontainers
+  postgresql), `application.yml`(jdbc:postgresql), 부팅 스모크 테스트, SPEC §2/§3/§10 표기.
+  SPEC §2 locked 스택을 사용자 승인으로 변경함.
