@@ -247,7 +247,7 @@ Dockerfile · docker-compose.yml · .env.example · .github/workflows/ci.yml · 
 
 - [x] **M0 — Scaffold.** Spring Initializr deps, Gradle wrapper, base packages, `application.yml`
       with profiles (`local`, `test`, `prod`), Flyway `V1` empty baseline, app boots.
-- [ ] **M1 — Domain + persistence.** All entities, repositories, Flyway migrations,
+- [x] **M1 — Domain + persistence.** All entities, repositories, Flyway migrations,
       auditing, `@DataJpaTest` for repos. Green.
 - [ ] **M2 — Auth.** OAuth2 client config (Google + Kakao), JWT provider + filter, security
       chain, `/api/users/me`, dev-login for `local`/`test`. Tests for JWT + filter. Green.
