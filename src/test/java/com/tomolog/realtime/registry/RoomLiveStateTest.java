@@ -2,8 +2,11 @@ package com.tomolog.realtime.registry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.tomolog.realtime.dto.TimerSnapshot;
-import com.tomolog.room.domain.Presence;
+import com.tomolog.domain.realtime.RoomLiveState;
+import com.tomolog.domain.realtime.TimerPhase;
+import com.tomolog.domain.realtime.TimerSnapshot;
+import com.tomolog.domain.realtime.TimerTickResult;
+import com.tomolog.domain.room.Presence;
 import org.junit.jupiter.api.Test;
 
 class RoomLiveStateTest {

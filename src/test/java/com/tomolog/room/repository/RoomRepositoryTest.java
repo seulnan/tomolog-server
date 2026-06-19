@@ -2,8 +2,9 @@ package com.tomolog.room.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.tomolog.room.domain.Room;
-import com.tomolog.room.domain.RoomStatus;
+import com.tomolog.domain.room.Room;
+import com.tomolog.domain.room.RoomRepository;
+import com.tomolog.domain.room.RoomStatus;
 import com.tomolog.support.AbstractRepositoryTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

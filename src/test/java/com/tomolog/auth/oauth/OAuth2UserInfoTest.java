@@ -3,7 +3,8 @@ package com.tomolog.auth.oauth;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.tomolog.user.domain.OauthProvider;
+import com.tomolog.domain.user.OauthProvider;
+import com.tomolog.infrastructure.oauth.OAuth2UserInfo;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 

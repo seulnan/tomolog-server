@@ -3,9 +3,11 @@ package com.tomolog.gamification.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.tomolog.gamification.domain.Badge;
-import com.tomolog.gamification.domain.BadgeType;
-import com.tomolog.gamification.domain.RoomPet;
+import com.tomolog.domain.gamification.Badge;
+import com.tomolog.domain.gamification.BadgeRepository;
+import com.tomolog.domain.gamification.BadgeType;
+import com.tomolog.domain.gamification.RoomPet;
+import com.tomolog.domain.gamification.RoomPetRepository;
 import com.tomolog.support.AbstractRepositoryTest;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
