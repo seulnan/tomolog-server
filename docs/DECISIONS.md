@@ -131,5 +131,16 @@ Entry schema:
 - 부하 한계(stressTest, 로컬 실측): 단일 핫룸은 행-락 직렬화로 ~500~750 joins/s에서 천장
   (2만 동시 시도에도 정확히 2000, 에러 0 — 정확성 불변). 10개 방 분산 시 ~4,163 joins/s로
   약 6배 — 수평 확장. 즉 정확성은 안 터지고, 단일 방 처리량 한계는 그 방의 행-갱신 속도다.
+
+### [LEDGER-009] 공유 타이머 스케줄러는 단일 인스턴스 전제다
+- Status: OPEN
+- 도메인 맥락: 포모도로 공유 타이머는 `@Scheduled(fixedRate=1000)` 1초 틱으로 구동된다.
+  여러 인스턴스로 띄우면 각 인스턴스가 동시에 틱을 쏴서 TIMER_TICK이 중복 브로드캐스트된다.
+  M4의 분산 락이 모델링한 다중 인스턴스 세계와 충돌하는 알려진 한계.
+- 고려한 선택지: A) 단일 인스턴스 전제(현재) / B) 리더 선출(ShedLock/Redisson)로 한 인스턴스만
+  틱 / C) 타이머 상태를 Redis로 옮기고 분산 스케줄
+- 잠정 선택: A — 이유: M5 범위에선 단일 인스턴스로 충분하고 SPEC도 단일 서버 기준. 멀티
+  인스턴스 운영 시 B(ShedLock 등) 도입 필요. 지금은 한계를 명시만 함(은폐 금지).
+- 영향 범위: `realtime/timer/TimerScheduler`, 멀티 인스턴스 배포 시.
 - 영향 범위: Room(type·capacity 상한·host nullable), Flyway V3(시드 5), AtomicUpdateJoinStrategy,
   RoomService 라우팅, SPEC §3/§4.
