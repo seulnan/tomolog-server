@@ -31,5 +31,8 @@ public final class SharedContainers {
     registry.add("spring.data.redis.host", REDIS::getHost);
     registry.add("spring.data.redis.port", () -> REDIS.getMappedPort(6379));
     registry.add("tomolog.jwt.secret", () -> "integration-test-secret-0123456789-abcdef");
+    // Concurrency test holds a DB connection per thread while waiting on the room row lock,
+    // so give the pool room to avoid connection-timeout noise.
+    registry.add("spring.datasource.hikari.maximum-pool-size", () -> "40");
   }
 }
