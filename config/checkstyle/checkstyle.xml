@@ -45,7 +45,10 @@
         <module name="MemberName"/>
         <module name="ParameterName"/>
         <module name="LocalVariableName"/>
-        <module name="ConstantName"/>
+        <module name="ConstantName">
+            <!-- Allow the SLF4J convention of a lowercase 'log'/'logger' field. -->
+            <property name="format" value="^(log|logger|[A-Z][A-Z0-9]*(_[A-Z0-9]+)*)$"/>
+        </module>
 
         <!-- No star imports, no unused/redundant imports -->
         <module name="AvoidStarImport"/>
@@ -64,6 +67,8 @@
              is required to document (CLAUDE.md §2.1). -->
         <module name="MissingJavadocMethod">
             <property name="scope" value="public"/>
+            <!-- Methods only; constructors are exempt. Scoped to service/controller by path. -->
+            <property name="tokens" value="METHOD_DEF"/>
             <property name="allowMissingPropertyJavadoc" value="true"/>
             <property name="id" value="apiJavadoc"/>
         </module>
