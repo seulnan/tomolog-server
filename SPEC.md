@@ -253,7 +253,7 @@ Dockerfile · docker-compose.yml · .env.example · .github/workflows/ci.yml · 
       chain, `/api/users/me`, dev-login for `local`/`test`. Tests for JWT + filter. Green.
 - [x] **M3 — Rooms + pessimistic join.** Room CRUD, `PessimisticLockJoinStrategy`, leave,
       member endpoints. **Concurrency acceptance test (pessimistic) passes.** Green.
-- [ ] **M4 — Optimistic + distributed strategies.** Implement the other two, strategy
+- [x] **M4 — Optimistic + distributed strategies.** Implement the other two, strategy
       selection via config, Redisson setup. **Concurrency test passes for all three.** Green.
 - [ ] **M5 — Realtime.** WebSocket/STOMP config, CONNECT auth interceptor, presence registry,
       chat, shared Pomodoro timer + scheduler, room event broadcasting. WebSocket integration
