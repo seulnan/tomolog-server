@@ -265,7 +265,7 @@ Dockerfile · docker-compose.yml · .env.example · .github/workflows/ci.yml · 
 - [x] **M5 — Realtime.** WebSocket/STOMP config, CONNECT auth interceptor, presence registry,
       chat, shared Pomodoro timer + scheduler, room event broadcasting. WebSocket integration
       test passes. Green.
-- [ ] **M6 — Snapshots + gamification.** TomologEntry submit/feed (REST + `NEW_LOG` broadcast),
+- [x] **M6 — Snapshots + gamification.** TomologEntry submit/feed (REST + `NEW_LOG` broadcast),
       streak calc, badges, RoomPet growth (concurrent-safe). Tests for streak/badge/pet. Green.
 - [ ] **M7 — Docs + ops.** springdoc Swagger UI, JaCoCo, Dockerfile, docker-compose,
       GitHub Actions CI, README (see §12). Green; `docker compose up` boots healthy.

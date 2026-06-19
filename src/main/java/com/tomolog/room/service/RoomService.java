@@ -2,6 +2,8 @@ package com.tomolog.room.service;
 
 import com.tomolog.common.error.ApiException;
 import com.tomolog.common.error.ErrorCode;
+import com.tomolog.gamification.domain.RoomPet;
+import com.tomolog.gamification.repository.RoomPetRepository;
 import com.tomolog.room.concurrency.JoinStrategyResolver;
 import com.tomolog.room.concurrency.JoinStrategyType;
 import com.tomolog.room.concurrency.RoomJoinStrategy;
@@ -34,16 +36,19 @@ public class RoomService {
 
   private final RoomRepository roomRepository;
   private final RoomMemberRepository roomMemberRepository;
+  private final RoomPetRepository roomPetRepository;
   private final JoinStrategyResolver joinStrategyResolver;
   private final ApplicationEventPublisher eventPublisher;
 
   public RoomService(
       RoomRepository roomRepository,
       RoomMemberRepository roomMemberRepository,
+      RoomPetRepository roomPetRepository,
       JoinStrategyResolver joinStrategyResolver,
       ApplicationEventPublisher eventPublisher) {
     this.roomRepository = roomRepository;
     this.roomMemberRepository = roomMemberRepository;
+    this.roomPetRepository = roomPetRepository;
     this.joinStrategyResolver = joinStrategyResolver;
     this.eventPublisher = eventPublisher;
   }
@@ -59,6 +64,7 @@ public class RoomService {
     room.increaseMemberCount();
     roomMemberRepository.save(
         new RoomMember(room.getId(), hostUserId, MemberRole.HOST, LocalDateTime.now()));
+    roomPetRepository.save(new RoomPet(room.getId()));
     return room;
   }
 

@@ -1,5 +1,8 @@
 package com.tomolog.realtime;
 
+import com.tomolog.gamification.dto.PetSnapshot;
+import com.tomolog.gamification.event.PetGrewEvent;
+import com.tomolog.log.event.NewLogEvent;
 import com.tomolog.realtime.dto.MemberEventPayload;
 import com.tomolog.realtime.event.RoomEvent;
 import com.tomolog.realtime.event.RoomEventType;
@@ -32,5 +35,20 @@ public class RoomEventBroadcaster {
     RoomEventType type = event.joined() ? RoomEventType.MEMBER_JOINED : RoomEventType.MEMBER_LEFT;
     broadcast(
         event.roomId(), RoomEvent.of(type, event.roomId(), new MemberEventPayload(event.userId())));
+  }
+
+  @EventListener
+  public void onNewLog(NewLogEvent event) {
+    broadcast(event.roomId(), RoomEvent.of(RoomEventType.NEW_LOG, event.roomId(), event.log()));
+  }
+
+  @EventListener
+  public void onPetGrew(PetGrewEvent event) {
+    broadcast(
+        event.roomId(),
+        RoomEvent.of(
+            RoomEventType.PET_GREW,
+            event.roomId(),
+            new PetSnapshot(event.roomId(), event.growthPoints(), event.level())));
   }
 }
