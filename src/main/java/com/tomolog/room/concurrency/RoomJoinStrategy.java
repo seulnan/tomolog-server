@@ -17,4 +17,7 @@ public interface RoomJoinStrategy {
    * @return the created membership
    */
   RoomMember join(Long roomId, Long userId);
+
+  /** The strategy kind, used to select the active implementation from config. */
+  JoinStrategyType type();
 }

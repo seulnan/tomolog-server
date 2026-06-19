@@ -12,7 +12,16 @@ import org.testcontainers.utility.DockerImageName;
 public final class SharedContainers {
 
   public static final PostgreSQLContainer<?> POSTGRES =
-      new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"));
+      new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
+          // Headroom + durability off so load tests measure the join mechanism, not disk/pool.
+          .withCommand(
+              "postgres",
+              "-c",
+              "max_connections=200",
+              "-c",
+              "fsync=off",
+              "-c",
+              "synchronous_commit=off");
   public static final GenericContainer<?> REDIS =
       new GenericContainer<>(DockerImageName.parse("redis:7-alpine")).withExposedPorts(6379);
 
@@ -33,6 +42,6 @@ public final class SharedContainers {
     registry.add("tomolog.jwt.secret", () -> "integration-test-secret-0123456789-abcdef");
     // Concurrency test holds a DB connection per thread while waiting on the room row lock,
     // so give the pool room to avoid connection-timeout noise.
-    registry.add("spring.datasource.hikari.maximum-pool-size", () -> "40");
+    registry.add("spring.datasource.hikari.maximum-pool-size", () -> "60");
   }
 }

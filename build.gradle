@@ -117,8 +117,23 @@ pmd {
 // Test + JaCoCo
 // ---------------------------------------------------------------------------
 tasks.named('test') {
-    useJUnitPlatform()
+    // Heavy stress/load tests are tag-excluded from the default build; run them via `stressTest`.
+    useJUnitPlatform {
+        excludeTags 'stress'
+    }
     finalizedBy jacocoTestReport
+}
+
+// On-demand heavy load/stress tests: `./gradlew stressTest`. Not part of `build` (minutes-long).
+tasks.register('stressTest', Test) {
+    description = 'Heavy load/stress tests (tag: stress). Not run by the default build.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'stress'
+    }
+    shouldRunAfter tasks.named('test')
 }
 
 // Excluded from coverage: the Spring Boot entry point (its main() is not exercised by

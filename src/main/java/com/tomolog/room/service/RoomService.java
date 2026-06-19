@@ -2,11 +2,14 @@ package com.tomolog.room.service;
 
 import com.tomolog.common.error.ApiException;
 import com.tomolog.common.error.ErrorCode;
+import com.tomolog.room.concurrency.JoinStrategyResolver;
+import com.tomolog.room.concurrency.JoinStrategyType;
 import com.tomolog.room.concurrency.RoomJoinStrategy;
 import com.tomolog.room.domain.MemberRole;
 import com.tomolog.room.domain.Room;
 import com.tomolog.room.domain.RoomMember;
 import com.tomolog.room.domain.RoomStatus;
+import com.tomolog.room.domain.RoomType;
 import com.tomolog.room.repository.RoomMemberRepository;
 import com.tomolog.room.repository.RoomRepository;
 import java.time.LocalDateTime;
@@ -17,31 +20,35 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Room lifecycle and membership. The concurrency-guarded join is delegated to a strategy. */
+/**
+ * Room lifecycle and membership. The concurrency-guarded join is delegated to a strategy, which
+ * owns its own transaction — so {@code join} here is deliberately non-transactional, and the read
+ * methods are individually marked read-only.
+ */
 @Service
-@Transactional(readOnly = true)
 public class RoomService {
 
   private static final int MAX_INVITE_CODE_ATTEMPTS = 5;
 
   private final RoomRepository roomRepository;
   private final RoomMemberRepository roomMemberRepository;
-  private final RoomJoinStrategy joinStrategy;
+  private final JoinStrategyResolver joinStrategyResolver;
 
   public RoomService(
       RoomRepository roomRepository,
       RoomMemberRepository roomMemberRepository,
-      RoomJoinStrategy joinStrategy) {
+      JoinStrategyResolver joinStrategyResolver) {
     this.roomRepository = roomRepository;
     this.roomMemberRepository = roomMemberRepository;
-    this.joinStrategy = joinStrategy;
+    this.joinStrategyResolver = joinStrategyResolver;
   }
 
-  /** Creates a room and joins the host as its first member. */
+  /** Creates a PRIVATE room and joins the host as its first member. */
   @Transactional
   public Room createRoom(Long hostUserId, String name, int capacity) {
-    if (capacity < 2 || capacity > Room.MAX_CAPACITY) {
-      throw new ApiException(ErrorCode.INVALID_INPUT, "정원은 2~" + Room.MAX_CAPACITY + " 사이여야 합니다.");
+    if (capacity < 2 || capacity > Room.PRIVATE_MAX_CAPACITY) {
+      throw new ApiException(
+          ErrorCode.INVALID_INPUT, "정원은 2~" + Room.PRIVATE_MAX_CAPACITY + " 사이여야 합니다.");
     }
     Room room = roomRepository.save(new Room(name, hostUserId, capacity, generateInviteCode()));
     room.increaseMemberCount();
@@ -51,6 +58,7 @@ public class RoomService {
   }
 
   /** Lists rooms, optionally filtered by status, newest first. */
+  @Transactional(readOnly = true)
   public Page<Room> listRooms(RoomStatus status, Pageable pageable) {
     return status == null
         ? roomRepository.findAll(pageable)
@@ -58,6 +66,7 @@ public class RoomService {
   }
 
   /** Returns the room or throws {@link ErrorCode#ROOM_NOT_FOUND}. */
+  @Transactional(readOnly = true)
   public Room getRoom(Long roomId) {
     return roomRepository
         .findById(roomId)
@@ -65,32 +74,57 @@ public class RoomService {
   }
 
   /** Returns the room's current members. */
+  @Transactional(readOnly = true)
   public List<RoomMember> getMembers(Long roomId) {
     return roomMemberRepository.findByRoomId(roomId);
   }
 
   /**
-   * Joins a user via the configured concurrency strategy. Marked read-write so the strategy's
-   * {@code SELECT ... FOR UPDATE} does not inherit the class-level read-only transaction.
+   * Joins a user, routing by room type: large THEMED rooms use the high-throughput atomic strategy,
+   * PRIVATE rooms use the configured strategy. Not transactional here — the selected strategy owns
+   * its own transaction (optimistic retries each need a fresh one).
    */
-  @Transactional
   public RoomMember join(Long roomId, Long userId) {
-    return joinStrategy.join(roomId, userId);
+    RoomType type =
+        roomRepository
+            .findTypeById(roomId)
+            .orElseThrow(() -> new ApiException(ErrorCode.ROOM_NOT_FOUND));
+    RoomJoinStrategy strategy =
+        type == RoomType.THEMED
+            ? joinStrategyResolver.strategyFor(JoinStrategyType.ATOMIC)
+            : joinStrategyResolver.active();
+    return strategy.join(roomId, userId);
   }
 
-  /** Removes the user's membership and decrements the room's counter under a row lock. */
+  /**
+   * Removes the user's membership and decrements the counter. THEMED rooms use an atomic counter
+   * update (no row lock); PRIVATE rooms decrement under a row lock, consistent with their join
+   * path.
+   */
   @Transactional
   public void leave(Long roomId, Long userId) {
     RoomMember member =
         roomMemberRepository
             .findByRoomIdAndUserId(roomId, userId)
             .orElseThrow(() -> new ApiException(ErrorCode.NOT_ROOM_MEMBER));
-    Room room =
+    RoomType type =
         roomRepository
-            .findByIdForUpdate(roomId)
+            .findTypeById(roomId)
             .orElseThrow(() -> new ApiException(ErrorCode.ROOM_NOT_FOUND));
-    roomMemberRepository.delete(member);
-    room.decreaseMemberCount();
+    if (type == RoomType.THEMED) {
+      // Flush the membership delete before the bulk counter update: that query clears the
+      // persistence context, which would otherwise discard the still-pending delete.
+      roomMemberRepository.delete(member);
+      roomMemberRepository.flush();
+      roomRepository.decreaseMemberCount(roomId);
+    } else {
+      roomMemberRepository.delete(member);
+      Room room =
+          roomRepository
+              .findByIdForUpdate(roomId)
+              .orElseThrow(() -> new ApiException(ErrorCode.ROOM_NOT_FOUND));
+      room.decreaseMemberCount();
+    }
   }
 
   private String generateInviteCode() {

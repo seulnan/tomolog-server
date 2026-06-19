@@ -16,16 +16,22 @@ import jakarta.persistence.Version;
 @Table(name = "rooms")
 public class Room extends BaseTimeEntity {
 
-  public static final int MAX_CAPACITY = 6;
+  public static final int PRIVATE_MAX_CAPACITY = 50;
+  public static final int THEMED_MAX_CAPACITY = 2000;
 
   @Column(nullable = false, length = 50)
   private String name;
 
-  @Column(name = "host_user_id", nullable = false)
+  // Null for THEMED rooms, which have no human host.
+  @Column(name = "host_user_id")
   private Long hostUserId;
 
   @Column(nullable = false)
   private int capacity;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 20)
+  private RoomType type;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
@@ -44,10 +50,15 @@ public class Room extends BaseTimeEntity {
   protected Room() {}
 
   public Room(String name, Long hostUserId, int capacity, String inviteCode) {
+    this(name, hostUserId, capacity, inviteCode, RoomType.PRIVATE);
+  }
+
+  public Room(String name, Long hostUserId, int capacity, String inviteCode, RoomType type) {
     this.name = name;
     this.hostUserId = hostUserId;
     this.capacity = capacity;
     this.inviteCode = inviteCode;
+    this.type = type;
     this.status = RoomStatus.WAITING;
     this.currentMemberCount = 0;
   }
@@ -80,6 +91,10 @@ public class Room extends BaseTimeEntity {
 
   public int getCapacity() {
     return capacity;
+  }
+
+  public RoomType getType() {
+    return type;
   }
 
   public RoomStatus getStatus() {
