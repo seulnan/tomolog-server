@@ -10,11 +10,13 @@ import com.tomolog.room.domain.Room;
 import com.tomolog.room.domain.RoomMember;
 import com.tomolog.room.domain.RoomStatus;
 import com.tomolog.room.domain.RoomType;
+import com.tomolog.room.event.RoomMembershipChangedEvent;
 import com.tomolog.room.repository.RoomMemberRepository;
 import com.tomolog.room.repository.RoomRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,14 +35,17 @@ public class RoomService {
   private final RoomRepository roomRepository;
   private final RoomMemberRepository roomMemberRepository;
   private final JoinStrategyResolver joinStrategyResolver;
+  private final ApplicationEventPublisher eventPublisher;
 
   public RoomService(
       RoomRepository roomRepository,
       RoomMemberRepository roomMemberRepository,
-      JoinStrategyResolver joinStrategyResolver) {
+      JoinStrategyResolver joinStrategyResolver,
+      ApplicationEventPublisher eventPublisher) {
     this.roomRepository = roomRepository;
     this.roomMemberRepository = roomMemberRepository;
     this.joinStrategyResolver = joinStrategyResolver;
+    this.eventPublisher = eventPublisher;
   }
 
   /** Creates a PRIVATE room and joins the host as its first member. */
@@ -93,7 +98,10 @@ public class RoomService {
         type == RoomType.THEMED
             ? joinStrategyResolver.strategyFor(JoinStrategyType.ATOMIC)
             : joinStrategyResolver.active();
-    return strategy.join(roomId, userId);
+    RoomMember member = strategy.join(roomId, userId);
+    // Published after the strategy's transaction has committed; the realtime layer broadcasts it.
+    eventPublisher.publishEvent(new RoomMembershipChangedEvent(roomId, userId, true));
+    return member;
   }
 
   /**
@@ -125,6 +133,7 @@ public class RoomService {
               .orElseThrow(() -> new ApiException(ErrorCode.ROOM_NOT_FOUND));
       room.decreaseMemberCount();
     }
+    eventPublisher.publishEvent(new RoomMembershipChangedEvent(roomId, userId, false));
   }
 
   private String generateInviteCode() {

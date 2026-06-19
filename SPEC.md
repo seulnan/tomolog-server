@@ -262,7 +262,7 @@ Dockerfile · docker-compose.yml · .env.example · .github/workflows/ci.yml · 
 - [x] **M4.5 — Room types + large-scale themed rooms (LEDGER-008).** PRIVATE (host-set, ≤50) vs
       THEMED (fixed 5, ≤2000, anonymous). Atomic-counter join strategy for THEMED, routed by type.
       **In-build load test: 2500 concurrent joins on a 2000-capacity room caps at exactly 2000.** Green.
-- [ ] **M5 — Realtime.** WebSocket/STOMP config, CONNECT auth interceptor, presence registry,
+- [x] **M5 — Realtime.** WebSocket/STOMP config, CONNECT auth interceptor, presence registry,
       chat, shared Pomodoro timer + scheduler, room event broadcasting. WebSocket integration
       test passes. Green.
 - [ ] **M6 — Snapshots + gamification.** TomologEntry submit/feed (REST + `NEW_LOG` broadcast),
