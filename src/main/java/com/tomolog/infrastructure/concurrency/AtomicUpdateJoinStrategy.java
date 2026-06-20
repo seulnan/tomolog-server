@@ -44,7 +44,7 @@ public class AtomicUpdateJoinStrategy implements RoomJoinStrategy {
       throw new RoomFullException();
     }
     try {
-      return roomMemberRepository.saveAndFlush(
+      return roomMemberRepository.save(
           new RoomMember(roomId, userId, MemberRole.MEMBER, LocalDateTime.now()));
     } catch (DataIntegrityViolationException duplicate) {
       // Already a member: the unique (room_id, user_id) constraint tripped. The transaction is now

@@ -60,6 +60,7 @@ public class RoomService {
     }
     Room room = roomRepository.save(new Room(name, hostUserId, capacity, generateInviteCode()));
     room.increaseMemberCount();
+    room = roomRepository.save(room);
     roomMemberRepository.save(
         new RoomMember(room.getId(), hostUserId, MemberRole.HOST, LocalDateTime.now()));
     roomPetRepository.save(new RoomPet(room.getId()));
@@ -124,10 +125,8 @@ public class RoomService {
             .findTypeById(roomId)
             .orElseThrow(() -> new ApiException(ErrorCode.ROOM_NOT_FOUND));
     if (type == RoomType.THEMED) {
-      // Flush the membership delete before the bulk counter update: that query clears the
-      // persistence context, which would otherwise discard the still-pending delete.
+      // The delete adapter flushes, so the bulk counter update below sees the row gone.
       roomMemberRepository.delete(member);
-      roomMemberRepository.flush();
       roomRepository.decreaseMemberCount(roomId);
     } else {
       roomMemberRepository.delete(member);
@@ -136,6 +135,7 @@ public class RoomService {
               .findByIdForUpdate(roomId)
               .orElseThrow(() -> new ApiException(ErrorCode.ROOM_NOT_FOUND));
       room.decreaseMemberCount();
+      roomRepository.save(room);
     }
     eventPublisher.publishEvent(new RoomMembershipChangedEvent(roomId, userId, false));
   }

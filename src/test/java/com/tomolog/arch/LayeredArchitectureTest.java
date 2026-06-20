@@ -71,6 +71,21 @@ class LayeredArchitectureTest {
   }
 
   @Test
+  void domain_isFreeOfJpaCoupling() {
+    ArchRule rule =
+        com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses()
+            .that()
+            .resideInAPackage("com.tomolog.domain..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage("jakarta.persistence..", "org.springframework.data.jpa..")
+            .because(
+                "domain is a pure model — JPA entities/repositories live only in infrastructure"
+                    + " (LEDGER-007 hexagonal). Pagination value types are allowed.");
+    rule.check(classes);
+  }
+
+  @Test
   void noFieldInjection_constructorInjectionOnly() {
     ArchRule rule =
         fields()

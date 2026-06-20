@@ -1,43 +1,33 @@
 package com.tomolog.domain.gamification;
 
-import com.tomolog.domain.common.BaseTimeEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 
 /**
- * A badge a user has earned. The unique constraint on (user_id, type) makes earning idempotent — a
- * user holds each badge type at most once (SPEC §3).
+ * A badge a user has earned — a pure domain model. Earned once and never mutated; the unique
+ * (userId, type) constraint at the persistence layer makes awarding idempotent (SPEC §3).
  */
-@Entity
-@Table(
-    name = "badges",
-    uniqueConstraints =
-        @UniqueConstraint(
-            name = "uq_badges_user_type",
-            columnNames = {"user_id", "type"}))
-public class Badge extends BaseTimeEntity {
+public class Badge {
 
-  @Column(name = "user_id", nullable = false)
-  private Long userId;
+  private final Long id;
+  private final Long userId;
+  private final BadgeType type;
+  private final LocalDateTime earnedAt;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 30)
-  private BadgeType type;
-
-  @Column(name = "earned_at", nullable = false)
-  private LocalDateTime earnedAt;
-
-  protected Badge() {}
-
+  /** Creates a newly earned badge (no id yet — assigned on persist). */
   public Badge(Long userId, BadgeType type, LocalDateTime earnedAt) {
+    this(null, userId, type, earnedAt);
+  }
+
+  /** Full constructor used by the persistence mapper. */
+  public Badge(Long id, Long userId, BadgeType type, LocalDateTime earnedAt) {
+    this.id = id;
     this.userId = userId;
     this.type = type;
     this.earnedAt = earnedAt;
+  }
+
+  public Long getId() {
+    return id;
   }
 
   public Long getUserId() {

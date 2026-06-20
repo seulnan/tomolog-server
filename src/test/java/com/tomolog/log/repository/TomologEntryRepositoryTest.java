@@ -4,12 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.tomolog.domain.log.TomologEntry;
 import com.tomolog.domain.log.TomologEntryRepository;
+import com.tomolog.infrastructure.persistence.log.TomologEntryMapper;
+import com.tomolog.infrastructure.persistence.log.TomologEntryPersistenceAdapter;
 import com.tomolog.support.AbstractRepositoryTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+@Import({TomologEntryPersistenceAdapter.class, TomologEntryMapper.class})
 class TomologEntryRepositoryTest extends AbstractRepositoryTest {
 
   @Autowired private TomologEntryRepository tomologEntryRepository;

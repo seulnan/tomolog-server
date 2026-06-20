@@ -78,6 +78,7 @@ public class DistributedLockJoinStrategy implements RoomJoinStrategy {
       throw new RoomFullException();
     }
     room.increaseMemberCount();
+    roomRepository.save(room);
     return roomMemberRepository.save(
         new RoomMember(roomId, userId, MemberRole.MEMBER, LocalDateTime.now()));
   }

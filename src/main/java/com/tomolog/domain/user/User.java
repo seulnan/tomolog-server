@@ -1,69 +1,64 @@
 package com.tomolog.domain.user;
 
-import com.tomolog.domain.common.BaseTimeEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
- * A registered user. Identity comes from an OAuth provider; study stats (minutes, streaks) are
- * maintained as gamification events happen (SPEC §3).
+ * A registered user — a pure domain model with no persistence framework coupling. Identity comes
+ * from an OAuth provider; study stats (minutes, streaks) advance as snapshots are submitted (SPEC
+ * §3). The mapper reconstitutes this from the JPA entity and back.
  */
-@Entity
-@Table(
-    name = "users",
-    uniqueConstraints =
-        @UniqueConstraint(
-            name = "uq_users_provider_oauth_id",
-            columnNames = {"oauth_provider", "oauth_id"}))
-public class User extends BaseTimeEntity {
+public class User {
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "oauth_provider", nullable = false, length = 20)
-  private OauthProvider oauthProvider;
-
-  @Column(name = "oauth_id", nullable = false, length = 100)
-  private String oauthId;
-
-  @Column(nullable = false, length = 100)
+  private final Long id;
+  private final OauthProvider oauthProvider;
+  private final String oauthId;
   private String email;
-
-  @Column(nullable = false, length = 30)
   private String nickname;
-
-  @Enumerated(EnumType.STRING)
-  @Column(name = "avatar_type", nullable = false, length = 20)
   private AvatarType avatarType;
-
-  @Column(name = "total_study_minutes", nullable = false)
   private long totalStudyMinutes;
-
-  @Column(name = "current_streak", nullable = false)
   private int currentStreak;
-
-  @Column(name = "longest_streak", nullable = false)
   private int longestStreak;
-
-  @Column(name = "last_study_date")
   private LocalDate lastStudyDate;
+  private final LocalDateTime createdAt;
+  private final LocalDateTime updatedAt;
 
-  protected User() {}
-
+  /** Creates a brand-new user (no id/timestamps yet — assigned on persist). */
   public User(
       OauthProvider oauthProvider,
       String oauthId,
       String email,
       String nickname,
       AvatarType avatarType) {
+    this(null, oauthProvider, oauthId, email, nickname, avatarType, 0L, 0, 0, null, null, null);
+  }
+
+  /** Full constructor used by the persistence mapper to reconstitute a stored user. */
+  public User(
+      Long id,
+      OauthProvider oauthProvider,
+      String oauthId,
+      String email,
+      String nickname,
+      AvatarType avatarType,
+      long totalStudyMinutes,
+      int currentStreak,
+      int longestStreak,
+      LocalDate lastStudyDate,
+      LocalDateTime createdAt,
+      LocalDateTime updatedAt) {
+    this.id = id;
     this.oauthProvider = oauthProvider;
     this.oauthId = oauthId;
     this.email = email;
     this.nickname = nickname;
     this.avatarType = avatarType;
+    this.totalStudyMinutes = totalStudyMinutes;
+    this.currentStreak = currentStreak;
+    this.longestStreak = longestStreak;
+    this.lastStudyDate = lastStudyDate;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
   }
 
   public void updateProfile(String nickname, AvatarType avatarType) {
@@ -84,6 +79,10 @@ public class User extends BaseTimeEntity {
     }
     this.longestStreak = Math.max(longestStreak, currentStreak);
     this.lastStudyDate = today;
+  }
+
+  public Long getId() {
+    return id;
   }
 
   public OauthProvider getOauthProvider() {
@@ -120,5 +119,13 @@ public class User extends BaseTimeEntity {
 
   public LocalDate getLastStudyDate() {
     return lastStudyDate;
+  }
+
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
+
+  public LocalDateTime getUpdatedAt() {
+    return updatedAt;
   }
 }

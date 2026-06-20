@@ -7,12 +7,16 @@ import com.tomolog.domain.room.MemberRole;
 import com.tomolog.domain.room.Presence;
 import com.tomolog.domain.room.RoomMember;
 import com.tomolog.domain.room.RoomMemberRepository;
+import com.tomolog.infrastructure.persistence.room.RoomMemberMapper;
+import com.tomolog.infrastructure.persistence.room.RoomMemberPersistenceAdapter;
 import com.tomolog.support.AbstractRepositoryTest;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 
+@Import({RoomMemberPersistenceAdapter.class, RoomMemberMapper.class})
 class RoomMemberRepositoryTest extends AbstractRepositoryTest {
 
   @Autowired private RoomMemberRepository roomMemberRepository;
@@ -47,7 +51,7 @@ class RoomMemberRepositoryTest extends AbstractRepositoryTest {
         roomMemberRepository.save(new RoomMember(12L, 23L, MemberRole.MEMBER, LocalDateTime.now()));
 
     member.updatePresence(Presence.AWAY);
-    RoomMember reloaded = roomMemberRepository.saveAndFlush(member);
+    RoomMember reloaded = roomMemberRepository.save(member);
 
     assertThat(reloaded.getPresence()).isEqualTo(Presence.AWAY);
   }
@@ -58,7 +62,7 @@ class RoomMemberRepositoryTest extends AbstractRepositoryTest {
 
     assertThatThrownBy(
             () ->
-                roomMemberRepository.saveAndFlush(
+                roomMemberRepository.save(
                     new RoomMember(13L, 24L, MemberRole.MEMBER, LocalDateTime.now())))
         .isInstanceOf(DataIntegrityViolationException.class);
   }

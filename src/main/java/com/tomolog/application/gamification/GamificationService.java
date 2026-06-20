@@ -48,6 +48,7 @@ public class GamificationService {
             .findById(userId)
             .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
     user.recordStudy(studiedMinutes, now.toLocalDate());
+    userRepository.save(user);
     growPet(roomId, studiedMinutes);
     awardBadges(user, studiedMinutes, now);
   }

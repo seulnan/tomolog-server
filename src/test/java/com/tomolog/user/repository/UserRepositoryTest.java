@@ -6,11 +6,15 @@ import com.tomolog.domain.user.AvatarType;
 import com.tomolog.domain.user.OauthProvider;
 import com.tomolog.domain.user.User;
 import com.tomolog.domain.user.UserRepository;
+import com.tomolog.infrastructure.persistence.user.UserMapper;
+import com.tomolog.infrastructure.persistence.user.UserPersistenceAdapter;
 import com.tomolog.support.AbstractRepositoryTest;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 
+@Import({UserPersistenceAdapter.class, UserMapper.class})
 class UserRepositoryTest extends AbstractRepositoryTest {
 
   @Autowired private UserRepository userRepository;

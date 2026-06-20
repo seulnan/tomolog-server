@@ -47,7 +47,7 @@ public class LogService {
       throw new ApiException(ErrorCode.NOT_ROOM_MEMBER);
     }
     TomologEntry entry =
-        entryRepository.saveAndFlush(
+        entryRepository.save(
             new TomologEntry(roomId, userId, cycleNumber, emoji, memo, studiedMinutes));
     gamificationService.recordStudy(userId, roomId, studiedMinutes, now);
     LogResponse response = LogResponse.from(entry);

@@ -1,4 +1,4 @@
-package com.tomolog.domain.common;
+package com.tomolog.infrastructure.persistence.common;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
