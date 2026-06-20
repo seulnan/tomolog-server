@@ -114,7 +114,8 @@ Entry schema:
   TokenResponse→application 이동). 동작 불변(테스트 무수정). build green, 커버리지 91.7%.
   커버리지 80% 글롭은 application/infrastructure.concurrency로 재배치 후 깨보기로 실발동 확인
   (한 패키지를 임시로 기준 밑으로 떨궈 RED 확인 뒤 원복). 체크스타일 Javadoc은 *Controller/*Service로 한정.
-- 영향 범위: 전체 패키지 구조, ArchUnit 규칙, 커버리지·체크스타일 게이트 경로. 매퍼는 미도입(B 보류).
+- 영향 범위: 전체 패키지 구조, ArchUnit 규칙, 커버리지·체크스타일 게이트 경로. (매퍼 B안은 이후
+  [LEDGER-010]에서 도입함.)
 
 ### [LEDGER-008] 방을 두 종류로 나누고 대규모 입장을 별도 처리한다
 - Status: SETTLED
@@ -147,3 +148,26 @@ Entry schema:
 - 영향 범위: `realtime/timer/TimerScheduler`, 멀티 인스턴스 배포 시.
 - 영향 범위: Room(type·capacity 상한·host nullable), Flyway V3(시드 5), AtomicUpdateJoinStrategy,
   RoomService 라우팅, SPEC §3/§4.
+
+### [LEDGER-010] 헥사고날 B안(순수 도메인 ↔ JPA 엔티티 매퍼 분리)을 도입한다
+- Status: SETTLED
+- 도메인 맥락: 사용자가 LEDGER-007에서 A안(JPA 엔티티를 도메인에 유지)을 골랐다가, 이어서
+  "매퍼 도입(헥사고날 B안)도 해줘"라고 추가 지시(2026-06-20). 도메인 모델이 JPA에 묶여 있으면
+  영속성 관심사(@Entity·@Column·dirty checking)가 도메인 규칙에 새어든다. B안은 도메인을 순수
+  POJO로 두고, 영속성은 infrastructure의 엔티티+매퍼+어댑터가 책임진다.
+- 고려한 선택지: A) 현행 유지(JPA 엔티티=도메인) / B) 애그리거트별 5파일 패턴(순수 도메인 모델 +
+  포트 인터페이스(domain) + JPA 엔티티(infra) + 매퍼 + 영속성 어댑터)
+- 해소: B 채택 — 확인자 사용자, 2026-06-20. 6개 애그리거트(User/Badge/TomologEntry/RoomMember/
+  Room/RoomPet) 전부에 동일 패턴 적용. 리포지토리 인터페이스를 JpaRepository 상속에서 순수 포트로
+  바꾸고, JPQL @Lock/@Modifying 쿼리는 infra의 JpaRepository로 내림. BaseTimeEntity를
+  domain.common→infrastructure.persistence.common으로 이동(도메인의 마지막 JPA 제거).
+- 동시성 정확성 보존(핵심 리스크): detached 도메인 모델은 dirty checking이 없으므로 도메인 변경
+  지점마다 명시적 save() 호출 추가. 어댑터 save()는 update 시 같은 트랜잭션 안에서 managed 엔티티를
+  재조회 후 가변 필드만 apply → 비관적 FOR UPDATE 행락 유지·@Version 충돌 flush 시 발동·원자적
+  조건부 UPDATE는 JPQL 직행. 깨보기로 3종 재검증: (1) domain에 jakarta.persistence 의존 주입→
+  순수성 게이트 RED, (2) @Lock 제거→PESSIMISTIC 88 에러 RED, (3) count<capacity 제거→테마방
+  2000 대신 5000 입장 RED. 전부 원복. build green, 커버리지 ~91.7%, 4전략+펫50동시 테스트 PASS.
+- 새 게이트: ArchUnit domain_isFreeOfJpaCoupling — domain 패키지는 jakarta.persistence/
+  spring-data-jpa에 의존 불가.
+- 영향 범위: 6개 애그리거트의 도메인·infra 패키지, 모든 전략·서비스의 save() 호출, 리포지토리 테스트
+  (@Import로 어댑터+매퍼 와이어링), ArchUnit 순수성 게이트.
