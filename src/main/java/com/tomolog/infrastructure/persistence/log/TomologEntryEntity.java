@@ -1,6 +1,6 @@
 package com.tomolog.infrastructure.persistence.log;
 
-import com.tomolog.domain.common.BaseTimeEntity;
+import com.tomolog.infrastructure.persistence.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;

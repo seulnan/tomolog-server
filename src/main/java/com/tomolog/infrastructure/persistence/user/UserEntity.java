@@ -1,8 +1,8 @@
 package com.tomolog.infrastructure.persistence.user;
 
-import com.tomolog.domain.common.BaseTimeEntity;
 import com.tomolog.domain.user.AvatarType;
 import com.tomolog.domain.user.OauthProvider;
+import com.tomolog.infrastructure.persistence.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

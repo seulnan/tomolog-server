@@ -10,6 +10,8 @@ import com.tomolog.domain.gamification.RoomPet;
 import com.tomolog.domain.gamification.RoomPetRepository;
 import com.tomolog.infrastructure.persistence.gamification.BadgeMapper;
 import com.tomolog.infrastructure.persistence.gamification.BadgePersistenceAdapter;
+import com.tomolog.infrastructure.persistence.gamification.RoomPetMapper;
+import com.tomolog.infrastructure.persistence.gamification.RoomPetPersistenceAdapter;
 import com.tomolog.support.AbstractRepositoryTest;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
@@ -17,7 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 
-@Import({BadgePersistenceAdapter.class, BadgeMapper.class})
+@Import({
+  BadgePersistenceAdapter.class,
+  BadgeMapper.class,
+  RoomPetPersistenceAdapter.class,
+  RoomPetMapper.class
+})
 class GamificationRepositoryTest extends AbstractRepositoryTest {
 
   @Autowired private RoomPetRepository roomPetRepository;
@@ -30,7 +37,7 @@ class GamificationRepositoryTest extends AbstractRepositoryTest {
     assertThat(pet.getGrowthPoints()).isZero();
 
     pet.addGrowth(250);
-    RoomPet grown = roomPetRepository.saveAndFlush(pet);
+    RoomPet grown = roomPetRepository.save(pet);
 
     assertThat(grown.getGrowthPoints()).isEqualTo(250);
     assertThat(grown.getLevel()).isEqualTo(3);
@@ -41,7 +48,7 @@ class GamificationRepositoryTest extends AbstractRepositoryTest {
   void roomPet_isOnePerRoom() {
     roomPetRepository.save(new RoomPet(61L));
 
-    assertThatThrownBy(() -> roomPetRepository.saveAndFlush(new RoomPet(61L)))
+    assertThatThrownBy(() -> roomPetRepository.save(new RoomPet(61L)))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 

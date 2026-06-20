@@ -1,8 +1,8 @@
 package com.tomolog.infrastructure.persistence.room;
 
-import com.tomolog.domain.common.BaseTimeEntity;
 import com.tomolog.domain.room.MemberRole;
 import com.tomolog.domain.room.Presence;
+import com.tomolog.infrastructure.persistence.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
