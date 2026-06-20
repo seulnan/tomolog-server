@@ -60,6 +60,7 @@ public class RoomService {
     }
     Room room = roomRepository.save(new Room(name, hostUserId, capacity, generateInviteCode()));
     room.increaseMemberCount();
+    room = roomRepository.save(room);
     roomMemberRepository.save(
         new RoomMember(room.getId(), hostUserId, MemberRole.HOST, LocalDateTime.now()));
     roomPetRepository.save(new RoomPet(room.getId()));
@@ -134,6 +135,7 @@ public class RoomService {
               .findByIdForUpdate(roomId)
               .orElseThrow(() -> new ApiException(ErrorCode.ROOM_NOT_FOUND));
       room.decreaseMemberCount();
+      roomRepository.save(room);
     }
     eventPublisher.publishEvent(new RoomMembershipChangedEvent(roomId, userId, false));
   }

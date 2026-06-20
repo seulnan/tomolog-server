@@ -5,12 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.tomolog.domain.room.Room;
 import com.tomolog.domain.room.RoomRepository;
 import com.tomolog.domain.room.RoomStatus;
+import com.tomolog.infrastructure.persistence.room.RoomMapper;
+import com.tomolog.infrastructure.persistence.room.RoomPersistenceAdapter;
 import com.tomolog.support.AbstractRepositoryTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+@Import({RoomPersistenceAdapter.class, RoomMapper.class})
 class RoomRepositoryTest extends AbstractRepositoryTest {
 
   @Autowired private RoomRepository roomRepository;

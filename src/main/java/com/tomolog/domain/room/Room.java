@@ -1,66 +1,75 @@
 package com.tomolog.domain.room;
 
-import com.tomolog.domain.common.BaseTimeEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import java.time.LocalDateTime;
 
 /**
- * A study room. {@code currentMemberCount} is a denormalized counter the join strategies guard, and
- * {@code version} backs the optimistic-lock strategy (SPEC §3, §4).
+ * A study room — a pure domain model. {@code currentMemberCount} is the denormalized counter the
+ * join strategies guard; {@code version} mirrors the optimistic-lock version (the actual check
+ * happens on the JPA entity in the adapter). PRIVATE rooms are host-created (≤50); THEMED rooms are
+ * fixed, anonymous and large (≤2000) (SPEC §3, §4, LEDGER-008).
  */
-@Entity
-@Table(name = "rooms")
-public class Room extends BaseTimeEntity {
+public class Room {
 
   public static final int PRIVATE_MAX_CAPACITY = 50;
   public static final int THEMED_MAX_CAPACITY = 2000;
 
-  @Column(nullable = false, length = 50)
+  private final Long id;
   private String name;
-
-  // Null for THEMED rooms, which have no human host.
-  @Column(name = "host_user_id")
-  private Long hostUserId;
-
-  @Column(nullable = false)
-  private int capacity;
-
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 20)
-  private RoomType type;
-
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 20)
+  private final Long hostUserId;
+  private final int capacity;
+  private final RoomType type;
   private RoomStatus status;
-
-  @Column(name = "invite_code", nullable = false, unique = true, length = 12)
-  private String inviteCode;
-
-  @Column(name = "current_member_count", nullable = false)
+  private final String inviteCode;
   private int currentMemberCount;
+  private final Long version;
+  private final LocalDateTime createdAt;
+  private final LocalDateTime updatedAt;
 
-  @Version
-  @Column(nullable = false)
-  private Long version;
-
-  protected Room() {}
-
+  /** Creates a new PRIVATE room. */
   public Room(String name, Long hostUserId, int capacity, String inviteCode) {
     this(name, hostUserId, capacity, inviteCode, RoomType.PRIVATE);
   }
 
+  /** Creates a new room of the given type. */
   public Room(String name, Long hostUserId, int capacity, String inviteCode, RoomType type) {
+    this(
+        null,
+        name,
+        hostUserId,
+        capacity,
+        type,
+        RoomStatus.WAITING,
+        inviteCode,
+        0,
+        null,
+        null,
+        null);
+  }
+
+  /** Full constructor used by the persistence mapper. */
+  public Room(
+      Long id,
+      String name,
+      Long hostUserId,
+      int capacity,
+      RoomType type,
+      RoomStatus status,
+      String inviteCode,
+      int currentMemberCount,
+      Long version,
+      LocalDateTime createdAt,
+      LocalDateTime updatedAt) {
+    this.id = id;
     this.name = name;
     this.hostUserId = hostUserId;
     this.capacity = capacity;
-    this.inviteCode = inviteCode;
     this.type = type;
-    this.status = RoomStatus.WAITING;
-    this.currentMemberCount = 0;
+    this.status = status;
+    this.inviteCode = inviteCode;
+    this.currentMemberCount = currentMemberCount;
+    this.version = version;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
   }
 
   public boolean isFull() {
@@ -79,6 +88,10 @@ public class Room extends BaseTimeEntity {
 
   public void changeStatus(RoomStatus status) {
     this.status = status;
+  }
+
+  public Long getId() {
+    return id;
   }
 
   public String getName() {
@@ -111,5 +124,13 @@ public class Room extends BaseTimeEntity {
 
   public Long getVersion() {
     return version;
+  }
+
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
+
+  public LocalDateTime getUpdatedAt() {
+    return updatedAt;
   }
 }

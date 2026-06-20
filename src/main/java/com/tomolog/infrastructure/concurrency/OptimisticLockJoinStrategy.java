@@ -65,6 +65,9 @@ public class OptimisticLockJoinStrategy implements RoomJoinStrategy {
       throw new RoomFullException();
     }
     room.increaseMemberCount();
+    // Persist the counter first: the @Version optimistic check fires here on flush; a conflict
+    // rolls back and the outer loop retries before any member row is inserted.
+    roomRepository.save(room);
     return roomMemberRepository.save(
         new RoomMember(roomId, userId, MemberRole.MEMBER, LocalDateTime.now()));
   }
