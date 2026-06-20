@@ -122,6 +122,9 @@ tasks.named('test') {
     useJUnitPlatform {
         excludeTags 'stress'
     }
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+    }
     finalizedBy jacocoTestReport
 }
 

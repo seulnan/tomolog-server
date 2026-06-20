@@ -314,9 +314,21 @@ docker compose up --build      # app + postgres + redis 가 함께 뜬다
 
 ## 스크린샷
 
-- [ ] Swagger UI (`/swagger-ui.html`)
-- [ ] 동시성 합격 테스트 통과 로그
-- [ ] `docker compose up` 기동 로그 (app·postgres·redis healthy)
+### Swagger UI (`/swagger-ui.html`)
+전체 REST API 명세를 브라우저에서 바로 실행해 볼 수 있다.
+
+![Swagger UI](docs/images/swagger-ui.png)
+
+### 동시성 합격 테스트
+정원 4명 방에 100스레드를 동시에 출발시켜 정확히 4명만 성공함을 네 전략
+(PESSIMISTIC·OPTIMISTIC·DISTRIBUTED·ATOMIC) 모두에서 검증한다.
+
+![동시성 합격 테스트](docs/images/concurrency-test.png)
+
+### `docker compose up` 기동
+한 번의 기동으로 app·postgres·redis가 모두 `healthy` 상태로 뜬다.
+
+![docker compose up](docs/images/docker-compose-up.png)
 
 
 ## CI
