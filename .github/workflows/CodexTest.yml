@@ -1,0 +1,21 @@
+name: Codex bot trigger
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number
+        required: true
+
+permissions:
+  issues: write
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh issue comment "$ISSUE_NUMBER" --body "@codex 이 이슈를 분석해줘. 코드 변경은 하지 말고 분석 결과만 알려줘."
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
